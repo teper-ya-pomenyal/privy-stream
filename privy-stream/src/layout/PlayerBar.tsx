@@ -3,7 +3,7 @@ import type { Track } from '../api';
 import { fmtTime } from '../lib/format';
 import { meterHeights } from '../lib/viz';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
-import { cx } from '../ui';
+import { cx, NextIcon, PauseIcon, PlayIcon, PrevIcon } from '../ui';
 import s from './layout.module.css';
 
 /** Доля ширины элемента под курсором — для seek по полосе/волне. */
@@ -11,8 +11,6 @@ export const pointerFraction = (e: MouseEvent<HTMLElement>) => {
   const r = e.currentTarget.getBoundingClientRect();
   return (e.clientX - r.left) / r.width;
 };
-
-export const playGlyph = (playing: boolean) => (playing ? '❙❙' : '▶');
 
 export const trackSubline = (t: Track) => (t.release ? `${t.artist} · ${t.release}` : t.artist);
 
@@ -38,13 +36,13 @@ export function PlayerBar() {
       <div className={s.center}>
         <div className={s.transport}>
           <button type="button" className={s.skip} onClick={prev} aria-label="Предыдущий">
-            ◀◀
+            <PrevIcon />
           </button>
           <button type="button" className={s.playBtn} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
-            {playGlyph(playing)}
+            {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
           </button>
           <button type="button" className={s.skip} onClick={next} aria-label="Следующий">
-            ▶▶
+            <NextIcon />
           </button>
         </div>
         <div className={s.progressRow}>
@@ -201,7 +199,7 @@ export function MiniPlayer() {
         </div>
       </button>
       <button type="button" className={cx(s.playBtn, s.miniPlay)} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
-        {playGlyph(playing)}
+        {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
       </button>
     </div>
   );

@@ -7,6 +7,44 @@ import s from './ui.module.css';
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
+/**
+ * Транспортные значки — SVG, а не символы ▶/❙/◀: в шрифтах приложения таких
+ * глифов нет, и iOS во всех браузерах подменяет их цветными эмодзи.
+ */
+type IconProps = { size?: number };
+
+export function PlayIcon({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </svg>
+  );
+}
+
+export function PauseIcon({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M7.5 5.5h3.4v13H7.5zM13.1 5.5h3.4v13h-3.4z" />
+    </svg>
+  );
+}
+
+export function PrevIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6 5.5h2.2v13H6zM19 5.8v12.4L9.9 12z" />
+    </svg>
+  );
+}
+
+export function NextIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M15.8 5.5H18v13h-2.2zM5 5.8v12.4L14.1 12z" />
+    </svg>
+  );
+}
+
 /** Адрес узла для показа: без схемы (https://node.example → node.example). */
 export const hostLabel = (host: string) => host.replace(/^https?:\/\//, '');
 

@@ -5,7 +5,7 @@ import { fmtTime, plural } from '../lib/format';
 import { usePlayer } from '../store/player';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
-import { Button, Cover, EmptyState, ErrorNote, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
+import { Button, Cover, EmptyState, ErrorNote, PlayIcon, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
 export function Album() {
@@ -98,7 +98,8 @@ export function Album() {
                 disabled={!r?.tracks.length}
                 onClick={() => r && play(r.tracks[0], r.tracks)}
               >
-                ▶ СЛУШАТЬ
+                <PlayIcon size={12} />
+                СЛУШАТЬ
               </Button>
               <Button size="md">+ В БИБЛИОТЕКУ</Button>
               <Button size="md">СКАЧАТЬ FLAC</Button>

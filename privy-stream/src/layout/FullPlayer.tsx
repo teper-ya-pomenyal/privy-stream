@@ -3,8 +3,8 @@ import { fmtTime, trackNum } from '../lib/format';
 import { wavePeaks } from '../lib/viz';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
-import { Button, Cover, cx, TextLink } from '../ui';
-import { playGlyph, pointerFraction, VolumeControl } from './PlayerBar';
+import { Button, Cover, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
+import { pointerFraction, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
 
 const PEAKS = wavePeaks();
@@ -73,14 +73,14 @@ export function FullPlayer() {
           </div>
 
           <div className={s.fullTransport}>
-            <Button size="md" onClick={prev} style={{ padding: '12px 16px', fontSize: 12, fontWeight: 500 }} aria-label="Предыдущий">
-              ◀◀
+            <Button size="md" onClick={prev} style={{ padding: '12px 16px' }} aria-label="Предыдущий">
+              <PrevIcon size={16} />
             </Button>
             <button type="button" className={s.fullPlay} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
-              {playGlyph(playing)}
+              {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
             </button>
-            <Button size="md" onClick={next} style={{ padding: '12px 16px', fontSize: 12, fontWeight: 500 }} aria-label="Следующий">
-              ▶▶
+            <Button size="md" onClick={next} style={{ padding: '12px 16px' }} aria-label="Следующий">
+              <NextIcon size={16} />
             </Button>
             <div className={s.fullExtra}>
               <Button size="sm" style={{ padding: '12px 14px', color: 'var(--text-3)' }}>
