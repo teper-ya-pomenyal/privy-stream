@@ -17,6 +17,9 @@ body,
   margin: 0;
   padding: 0;
   height: 100%;
+  /* Системная подсветка тапа на iOS/WKWebView (синяя вспышка на ссылках,
+     кнопках, таймлайне) — убираем, у элементов есть свои состояния */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
