@@ -228,7 +228,9 @@
   gap: 16px;
 }
 .skip {
-  font: 500 12px/1 var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 2px;
   color: var(--text-3);
 }
 .skip:hover {
@@ -617,6 +619,28 @@
 }
 
 @media (max-width: 720px) {
+  /* Документ скроллится сам, а не внутренний .content, — иначе браузерный
+     pull-to-refresh не срабатывает. Шапка и низ прилипают к краям экрана. */
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .content {
+    overflow: visible;
+  }
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .mobileFoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-top: auto;
+  }
+
   .header {
     padding: 0 14px;
     padding-top: env(safe-area-inset-top);

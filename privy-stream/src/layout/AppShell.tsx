@@ -37,10 +37,10 @@ export function AppShell() {
         </main>
       </div>
       {mobile ? (
-        <>
+        <div className={s.mobileFoot}>
           <MiniPlayer />
           <TabBar />
-        </>
+        </div>
       ) : (
         <PlayerBar />
       )}

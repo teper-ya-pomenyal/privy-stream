@@ -136,6 +136,12 @@ input:focus-visible {
 
 /* iOS увеличивает страницу при фокусе на поле со шрифтом меньше 16px */
 @media (max-width: 720px) {
+  /* Скролл документа, а не внутреннего контейнера (см. layout.module.css):
+     без этого в мобильных браузерах не работает pull-to-refresh */
+  body {
+    overflow: visible;
+  }
+
   input,
   select {
     font-size: 16px !important;
