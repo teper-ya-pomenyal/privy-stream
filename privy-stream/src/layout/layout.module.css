@@ -539,12 +539,44 @@
   border-top: 1px solid var(--line-ctrl);
   background: var(--bg-card);
 }
-.miniProgress {
+/* Полоска таймлайна мини-плеера: линия 2px, но зона захвата выше и ниже неё,
+   чтобы попадать пальцем. Тап и перетаскивание — перемотка трека. */
+.miniSeek {
   position: absolute;
-  top: -1px;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  cursor: pointer;
+  touch-action: none;
+  z-index: 1;
+}
+.miniFill {
+  position: absolute;
+  top: 9px;
   left: 0;
   height: 2px;
   background: var(--accent);
+  pointer-events: none;
+  transition: height 0.1s;
+}
+/* Под пальцем/фокусом линия утолщается — видно, что схватили */
+.miniSeek:active .miniFill,
+.miniSeek:focus-visible .miniFill {
+  height: 4px;
+  top: 8px;
+}
+.miniTime {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line-ctrl);
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-2);
+  pointer-events: none;
 }
 .mini .nowPlaying {
   flex: 1;

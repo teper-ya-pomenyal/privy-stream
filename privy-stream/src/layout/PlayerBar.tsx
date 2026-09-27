@@ -145,13 +145,52 @@ function useMeterTick(playing: boolean) {
 /** Мобильный мини-плеер над таб-баром: тап по треку раскрывает полноэкранный плеер. */
 export function MiniPlayer() {
   const track = useCurrentTrack();
-  const { playing, position, loading, error, toggle, setFullscreen } = usePlayer();
+  const { playing, position, loading, error, toggle, seek, setFullscreen } = usePlayer();
   const duration = useDuration();
   const pct = duration ? Math.min(100, (position / duration) * 100) : 0;
+  // Скраббинг по полоске таймлайна: тап и перетаскивание переставляют позицию.
+  const [scrubbing, setScrubbing] = useState(false);
+
+  const startScrub = (e: PointerEvent<HTMLDivElement>) => {
+    if (!track || !duration) return;
+    // Захват указателя, чтобы перетаскивание не срывалось за пределами полоски.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // pointerdown без активного указателя (синтетическое событие) — просто seek
+    }
+    setScrubbing(true);
+    seek(pointerFraction(e));
+  };
+  const moveScrub = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.buttons === 1) seek(pointerFraction(e));
+  };
 
   return (
     <div className={s.mini}>
-      <div className={s.miniProgress} style={{ width: `${pct}%` }} />
+      {/* Полоска таймлайна — перемотка; остальная площадь мини-плеера открывает плеер */}
+      <div
+        className={s.miniSeek}
+        role="slider"
+        tabIndex={0}
+        aria-label="Позиция в треке"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration)}
+        aria-valuenow={Math.round(position)}
+        onPointerDown={startScrub}
+        onPointerMove={moveScrub}
+        onPointerUp={() => setScrubbing(false)}
+        onPointerCancel={() => setScrubbing(false)}
+        onKeyDown={(e) => {
+          const step = { ArrowRight: 10, ArrowUp: 10, ArrowLeft: -10, ArrowDown: -10 }[e.key];
+          if (step === undefined || !track || !duration) return;
+          e.preventDefault();
+          seek((position + step) / duration);
+        }}
+      >
+        <div className={s.miniFill} style={{ width: `${pct}%` }} />
+        {scrubbing && <span className={s.miniTime}>{fmtTime(position)}</span>}
+      </div>
       <button type="button" className={s.nowPlaying} onClick={() => track && setFullscreen(true)}>
         <div className={cx(s.thumb, s.miniThumb)} />
         <div className={s.nowText}>
