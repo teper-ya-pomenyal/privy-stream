@@ -1,11 +1,5 @@
-import {
-  useState,
-  type ButtonHTMLAttributes,
-  type CSSProperties,
-  type InputHTMLAttributes,
-  type ReactNode,
-  type SelectHTMLAttributes,
-} from 'react';
+import { useState, type ButtonHTMLAttributes, type CSSProperties, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { motion } from 'motion/react';
 import type { NodeInfo, Track } from '../api';
 import { fmtTime, trackNum } from '../lib/format';
 import { useCurrentTrack } from '../store/player';
@@ -283,7 +277,7 @@ export function Skeleton({ style }: { style?: CSSProperties }) {
 
 /**
  * Таблица треков.
- * release — треклист релиза (с подписью «артист · формат»), popular — без подписи,
+ * release — треклист релиза (с подписью «артист»; формат — в своей колонке), popular — без подписи,
  * library — шесть колонок фонотеки.
  */
 export function TrackTable({
@@ -319,11 +313,17 @@ export function TrackTable({
         const playing = current?.id === t.id;
         return (
           <button key={t.id} type="button" className={cx(s.trackRow, cols, playing && s.playing)} onClick={() => onPlay(t)}>
+            {/* Подсветка играющего трека переезжает к новой строке (Motion layoutId):
+                видно, что именно заиграло после клика или переключения. */}
+            {playing && (
+              <motion.span aria-hidden="true" className={s.playingBg} layoutId="pv-playing-row" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
+            )}
             <span className={s.tNum}>{trackNum(i)}</span>
             {variant === 'release' ? (
               <span className={s.tTitleCell}>
                 <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
-                <span className={s.tSub}>{[t.artist, t.format].filter(Boolean).join(' · ')}</span>
+                {/* Формат уже есть в своей колонке — под названием только артист. */}
+                <span className={s.tSub}>{t.artist}</span>
               </span>
             ) : variant === 'library' ? (
               <span className={s.tTitleCell}>

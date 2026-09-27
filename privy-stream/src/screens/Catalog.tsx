@@ -12,6 +12,9 @@ import s from './screens.module.css';
 const FILTERS = ['ВСЁ', 'АРТИСТЫ', 'РЕЛИЗЫ', 'ТРЕКИ'] as const;
 type Filter = (typeof FILTERS)[number];
 
+/** Разделы, которые есть только в выдаче поиска: полка узла отдаёт одни релизы. */
+const SEARCH_ONLY: readonly Filter[] = ['АРТИСТЫ', 'ТРЕКИ'];
+
 export function Catalog() {
   const node = useActiveNode();
   // key по host: поиск и фильтр сбрасываются при смене узла.
@@ -52,6 +55,11 @@ function CatalogView({ host, name }: { host: string; name: string }) {
   const searching = query.length > 0;
   const active = searching ? search : browse;
 
+  // Полка не умеет показывать артистов и треки — поиск-only фильтр на ней не остаётся.
+  useEffect(() => {
+    if (!searching && SEARCH_ONLY.includes(filter)) setFilter('ВСЁ');
+  }, [searching]);
+
   const result = useMemo(() => {
     const show = (section: Filter) => filter === 'ВСЁ' || filter === section;
     const res: SearchResult & { releases: Release[] } = searching
@@ -61,10 +69,13 @@ function CatalogView({ host, name }: { host: string; name: string }) {
       artists: show('АРТИСТЫ') ? res.artists : [],
       releases: show('РЕЛИЗЫ') ? res.releases : [],
       tracks: show('ТРЕКИ') ? res.tracks : [],
+      // Найдено всего, без учёта фильтра: отличаем «ничего не нашлось» от «фильтр всё скрыл».
+      total: res.artists.length + res.releases.length + res.tracks.length,
     };
   }, [searching, search.data, browse.data, filter]);
 
   const found = result.artists.length + result.releases.length + result.tracks.length;
+  const total = result.total;
   const openRelease = (id: string) => navigate(`/album/${encodeURIComponent(id)}`);
   const openArtist = (id: string) => navigate(`/artist/${encodeURIComponent(id)}`);
 
@@ -97,13 +108,17 @@ function CatalogView({ host, name }: { host: string; name: string }) {
       </div>
     );
   } else if (found === 0) {
-    body = (
-      <EmptyState
-        label="ПУСТОЙ ИНДЕКС"
-        text={searching ? 'На этом узле ничего не найдено по запросу.' : `Узел «${name}» пока ничего не раздаёт — владелец не залил фонотеку.`}
-        action={toServers}
-      />
-    );
+    body =
+      total > 0 ? (
+        // Совпадения есть, но выбранный раздел их не показывает — это не «пустой узел».
+        <EmptyState label="РАЗДЕЛ ПУСТ" text="По запросу есть совпадения в других разделах — переключи фильтр на ВСЁ." />
+      ) : (
+        <EmptyState
+          label="ПУСТОЙ ИНДЕКС"
+          text={searching ? 'На этом узле ничего не найдено по запросу.' : `Узел «${name}» пока ничего не отдаёт — владелец не залил фонотеку.`}
+          action={toServers}
+        />
+      );
   } else {
     body = (
       <div className={s.results} style={{ opacity: search.isPlaceholderData ? 0.6 : 1 }}>
@@ -152,7 +167,7 @@ function CatalogView({ host, name }: { host: string; name: string }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="трек или артист…"
-            suffix={searching && search.data ? String(found) : undefined}
+            suffix={searching && search.data ? String(total) : undefined}
             // На телефоне автофокус сразу открывает клавиатуру поверх полки.
             autoFocus={!mobile}
           />
@@ -160,18 +175,24 @@ function CatalogView({ host, name }: { host: string; name: string }) {
       />
 
       <div className={s.filters}>
-        {FILTERS.map((f) => (
-          <Button
-            key={f}
-            variant="quiet"
-            size="xs"
-            selected={filter === f}
-            style={{ padding: '7px 12px', letterSpacing: '.12em', cursor: 'pointer' }}
-            onClick={() => setFilter(f)}
-          >
-            {f}
-          </Button>
-        ))}
+        {FILTERS.map((f) => {
+          // Разделы поиска на полке недоступны: полка показывает только релизы.
+          const offShelf = !searching && SEARCH_ONLY.includes(f);
+          return (
+            <Button
+              key={f}
+              variant="quiet"
+              size="xs"
+              selected={filter === f}
+              disabled={offShelf}
+              title={offShelf ? 'работает в поиске — введи запрос' : undefined}
+              style={{ padding: '7px 12px', letterSpacing: '.12em', cursor: offShelf ? undefined : 'pointer' }}
+              onClick={() => setFilter(f)}
+            >
+              {f}
+            </Button>
+          );
+        })}
       </div>
 
       {body}
