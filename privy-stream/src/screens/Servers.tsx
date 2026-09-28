@@ -27,13 +27,12 @@ export function Servers() {
   return (
     <Screen>
       <ScreenHeader
-        eyebrow={`СЕТЬ УЗЛОВ · ${online} ОНЛАЙН`}
-        title="Серверы"
-        aside={
-          <p className={s.lede}>
+        title="Узлы"
+        sub={
+          <>
             Единого сервера нет. Любой может поднять свой узел, залить туда фонотеку и раздать адрес. Клиент подключается к
-            узлу и ищет музыку только на нём.
-          </p>
+            узлу и ищет музыку только на нём. Сейчас в сети: {online} из {nodes.length}.
+          </>
         }
       />
 
@@ -44,7 +43,7 @@ export function Servers() {
           void onAdd();
         }}
       >
-        <div className="t-section">ПОДКЛЮЧИТЬСЯ ПО АДРЕСУ</div>
+        <div className="t-section">Подключиться по адресу</div>
         <div className={s.addRow}>
           <PrefixedInput
             prefix="://"
@@ -56,8 +55,8 @@ export function Servers() {
             }}
             placeholder="10.0.0.5:8443"
           />
-          <Button type="submit" variant="accent" size="md" disabled={adding} style={{ padding: '13px 20px' }}>
-            {adding ? 'ПРОВЕРКА…' : 'ДОБАВИТЬ УЗЕЛ'}
+          <Button type="submit" variant="accent" size="md" disabled={adding}>
+            {adding ? 'Проверка…' : 'Добавить узел'}
           </Button>
           <div className={s.addNote}>
             ключ и история остаются
@@ -102,7 +101,7 @@ export function Servers() {
                     void onConnect(n.id);
                   }}
                 >
-                  {active ? 'ТЕКУЩИЙ' : n.status === 'online' ? 'ПОДКЛЮЧИТЬСЯ' : 'ПОВТОР'}
+                  {active ? 'Текущий' : n.status === 'online' ? 'Подключиться' : 'Повторить'}
                 </Button>
               </div>
             </div>
@@ -111,9 +110,9 @@ export function Servers() {
       </div>
 
       <div className={s.theses}>
-        <span>РЕЛИЗЫ ИНДЕКСИРУЮТСЯ УЗЛОМ, НЕ КЛИЕНТОМ</span>
-        <span>ПОИСК ИДЁТ ТОЛЬКО ПО ТЕКУЩЕМУ УЗЛУ</span>
-        <span>СМЕНА УЗЛА НЕ ТРОГАЕТ ЛОКАЛЬНУЮ ФОНОТЕКУ</span>
+        <span>Релизы индексируются узлом, не клиентом</span>
+        <span>Поиск идёт только по текущему узлу</span>
+        <span>Смена узла не трогает локальную фонотеку</span>
       </div>
     </Screen>
   );

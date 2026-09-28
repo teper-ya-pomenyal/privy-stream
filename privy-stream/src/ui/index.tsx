@@ -8,8 +8,9 @@ import s from './ui.module.css';
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
 /**
- * Транспортные значки — SVG, а не символы ▶/❙/◀: в шрифтах приложения таких
- * глифов нет, и iOS во всех браузерах подменяет их цветными эмодзи.
+ * Транспортные и служебные значки — SVG, а не символы ▶/❙/◀: в шрифтах
+ * приложения таких глифов нет, и iOS во всех браузерах подменяет их эмодзи.
+ * Один набор: чистый контур 1.6, скруглённые концы.
  */
 type IconProps = { size?: number };
 
@@ -44,6 +45,43 @@ export function NextIcon({ size = 14 }: IconProps) {
     </svg>
   );
 }
+
+const stroke = {
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.6,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+} as const;
+
+function Ico({ size = 20, d }: IconProps & { d: string[] }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" {...stroke}>
+      {d.map((p, i) => (
+        <path key={i} d={p} />
+      ))}
+    </svg>
+  );
+}
+
+export const SearchIcon = ({ size }: IconProps) => <Ico size={size} d={['M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Z', 'm15.5 15.5 4.5 4.5']} />;
+export const CloseIcon = ({ size }: IconProps) => <Ico size={size} d={['m6 6 12 12', 'm18 6-12 12']} />;
+export const ChevronRightIcon = ({ size }: IconProps) => <Ico size={size} d={['m9 5 7 7-7 7']} />;
+export const ChevronDownIcon = ({ size }: IconProps) => <Ico size={size} d={['m5 9 7 7 7-7']} />;
+export const BackIcon = ({ size }: IconProps) => <Ico size={size} d={['M19 12H5', 'm11 6-6 6 6 6']} />;
+export const CatalogIcon = ({ size }: IconProps) => <Ico size={size} d={['M4 5h16', 'M4 12h16', 'M4 19h10']} />;
+export const NodesIcon = ({ size }: IconProps) => <Ico size={size} d={['M4 5.5h16v5H4z', 'M4 13.5h16v5H4z', 'M7.2 8h.01', 'M7.2 16h.01']} />;
+export const LibraryIcon = ({ size }: IconProps) => <Ico size={size} d={['M5 4v16', 'M10 4v16', 'M15 5l4.2 14.4']} />;
+export const GearIcon = ({ size }: IconProps) => (
+  <Ico
+    size={size}
+    d={[
+      'M12 3.6c.5 0 1 .04 1.47.13l.5 2.05c.52.15 1 .37 1.45.64l1.83-1.1c.74.56 1.38 1.23 1.9 1.98l-1.13 1.8c.27.45.47.95.6 1.47l2.04.5a8.6 8.6 0 0 1 0 2.9l-2.05.5a6 6 0 0 1-.63 1.45l1.1 1.83a8.5 8.5 0 0 1-1.99 1.9l-1.8-1.13a6 6 0 0 1-1.46.61l-.5 2.04a8.6 8.6 0 0 1-2.9 0l-.5-2.05a6 6 0 0 1-1.45-.63l-1.83 1.1a8.5 8.5 0 0 1-1.9-1.99l1.13-1.8a6 6 0 0 1-.6-1.46l-2.04-.5a8.6 8.6 0 0 1 0-2.9l2.05-.5c.14-.51.35-1 .63-1.45L4.8 8.66a8.5 8.5 0 0 1 1.99-1.9l1.8 1.13a6 6 0 0 1 1.46-.61l.5-2.04c.47-.09.96-.13 1.45-.13Z',
+      'M12 9.4a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2Z',
+    ]}
+  />
+);
+export const QueueIcon = ({ size }: IconProps) => <Ico size={size} d={['M4 6h12', 'M4 12h12', 'M4 18h8', 'M19 10v8.2', 'm16.4 16.4 2.6 2.6 2.6-2.6']} />;
 
 /** Адрес узла для показа: без схемы (https://node.example → node.example). */
 export const hostLabel = (host: string) => host.replace(/^https?:\/\//, '');
@@ -100,7 +138,7 @@ export function PasswordField({ label, ...input }: Omit<InputHTMLAttributes<HTML
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setShown((v) => !v)}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" {...stroke}>
             <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" />
             <circle cx="12" cy="12" r="3" />
             {!shown && <path d="M4 20 20 4" />}
@@ -241,7 +279,7 @@ export function nodeState(node: NodeInfo, activeId: string, connectingId: string
 }
 
 export const NODE_STATUS: Record<NodeVisualState, { label: string; color: string; dot: string }> = {
-  active: { label: 'ПОДКЛЮЧЁН', color: 'var(--accent)', dot: 'var(--accent)' },
+  active: { label: 'ПОДКЛЮЧЁН', color: 'var(--accent-text)', dot: 'var(--accent)' },
   connecting: { label: 'ПОДКЛЮЧЕНИЕ…', color: 'var(--warn)', dot: 'var(--ok)' },
   online: { label: 'ДОСТУПЕН', color: 'var(--ok)', dot: 'var(--ok)' },
   offline: { label: 'НЕ ОТВЕЧАЕТ', color: 'var(--text-5)', dot: 'var(--dot-off)' },
@@ -256,25 +294,114 @@ export function StatusDot({ color, blink, size = 7, style }: { color: string; bl
   );
 }
 
+/* ---------- Обложки: генеративный fallback вместо «штриховки» ---------- */
+
+/** FNV-1a: стабильный hash строки — основа детерминированной композиции. */
+function hashSeed(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+const mulberry32 = (a: number) => () => {
+  a |= 0;
+  a = (a + 0x6d2b79f5) | 0;
+  let t = Math.imul(a ^ (a >>> 15), 1 | a);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
+const TONES = ['#d8452b', '#c9803f', '#b3552f', '#d86a3a'];
+const GROUNDS = ['#191e1c', '#161b19', '#1b201e', '#171c1a'];
+
+/**
+ * Обложка без картинки с узла: спокойная геометрия, устойчивая к seed
+ * (releaseId/trackId) — каждый релиз выглядит по-своему, без фейковых фото.
+ */
+export function CoverArt({ seed, className, style }: { seed: string; className?: string; style?: CSSProperties }) {
+  const rnd = mulberry32(hashSeed(seed));
+  const ground = GROUNDS[Math.floor(rnd() * GROUNDS.length)];
+  const tone = TONES[Math.floor(rnd() * TONES.length)];
+  const variant = Math.floor(rnd() * 4);
+  const off = 18 + rnd() * 30;
+  // Якорь композиции: левый-низ или правый-верх — соседние релизы меньше похожи
+  const flip = rnd() > 0.5;
+  const ax = flip ? 86 - rnd() * 10 : 14 + rnd() * 10;
+  const ay = flip ? 14 + rnd() * 10 : 86 - rnd() * 10;
+
+  return (
+    <svg className={cx(s.coverArt, className)} style={style} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="100" height="100" fill={ground} />
+      {variant === 0 && (
+        <>
+          <circle cx={flip ? 70 - off * 0.6 : 30 + off * 0.6} cy={flip ? 66 : 34} r={26} fill={tone} opacity="0.16" />
+          <circle cx={flip ? 70 - off * 0.6 : 30 + off * 0.6} cy={flip ? 66 : 34} r={26} fill="none" stroke={tone} strokeWidth="1.4" opacity="0.85" />
+          <rect x="0" y={64 + rnd() * 8} width="100" height="1.6" fill={tone} opacity="0.5" />
+        </>
+      )}
+      {variant === 1 && (
+        <>
+          {[0, 1, 2, 3, 4].map((i) => {
+            const x = 12 + i * 17;
+            const h = 30 + rnd() * 55;
+            return <rect key={i} x={x} y={100 - h} width={7} height={h} fill={i === Math.floor(rnd() * 5) ? tone : '#ffffff'} opacity={i % 2 ? 0.1 : 0.16} rx="1" />;
+          })}
+          <circle cx={50 + (rnd() - 0.5) * 30} cy={30 + rnd() * 18} r={5} fill={tone} opacity="0.9" />
+        </>
+      )}
+      {variant === 2 && (
+        <>
+          {[16, 28, 40, 52].map((r, i) => (
+            <circle key={r} cx={ax} cy={ay} r={r} fill="none" stroke={i === 1 ? tone : '#ffffff'} strokeWidth={i === 1 ? 2 : 1.2} opacity={i === 1 ? 0.8 : 0.12} />
+          ))}
+          <circle cx={ax + (flip ? -1 : 1) * (46 + rnd() * 12)} cy={ay + (flip ? 1 : -1) * (46 + rnd() * 8)} r={4.5} fill={tone} opacity="0.9" />
+        </>
+      )}
+      {variant === 3 && (
+        <>
+          <polygon points={flip ? `100,0 0,${34 + rnd() * 20} 0,0` : `0,100 100,${34 + rnd() * 20} 100,100`} fill={tone} opacity="0.14" />
+          <rect x={14 + rnd() * 58} y={16 + rnd() * 10} width="14" height="14" fill="none" stroke={tone} strokeWidth="1.6" opacity="0.9" />
+          <rect x="0" y={78 + rnd() * 6} width="100" height="1.4" fill="#ffffff" opacity="0.14" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** Аватар артиста: первая буква имени на устойчивом тоне — без фейковых фото. */
+export function ArtistAvatar({ name, className }: { name: string; className?: string }) {
+  const tone = TONES[hashSeed(name) % TONES.length];
+  const letter = [...name.trim()][0]?.toUpperCase() ?? '·';
+  return (
+    <span className={cx(s.avatar, className)} style={{ background: `${tone}26`, borderColor: `${tone}59` }} aria-hidden="true">
+      {letter}
+    </span>
+  );
+}
+
 export function Cover({
-  caption,
+  seed,
   code,
   flagged,
   src,
   className,
   style,
 }: {
-  caption?: ReactNode;
+  /** Стабильный идентификатор (releaseId) для генеративного fallback. */
+  seed: string;
   code?: string;
   flagged?: boolean;
-  /** Реальная обложка с узла; без неё остаётся плейсхолдер. */
+  /** Реальная обложка с узла; без неё остаётся генеративная заглушка. */
   src?: string;
   className?: string;
   style?: CSSProperties;
 }) {
   return (
     <div className={cx(s.cover, className)} style={style}>
-      {src ? <img className={s.coverImg} src={src} alt="" /> : caption && <span className={s.coverCaption}>{caption}</span>}
+      {src ? <img className={s.coverImg} src={src} alt="" /> : <CoverArt seed={seed} className={s.coverFill} />}
       {code && <span className={s.coverCode}>{code}</span>}
       {flagged && <span className={s.coverFlag}>18+</span>}
     </div>
@@ -285,12 +412,12 @@ export function Screen({ children }: { children: ReactNode }) {
   return <div className={s.screen}>{children}</div>;
 }
 
-export function ScreenHeader({ eyebrow, title, aside }: { eyebrow: ReactNode; title: ReactNode; aside?: ReactNode }) {
+export function ScreenHeader({ title, sub, aside }: { title: ReactNode; sub?: ReactNode; aside?: ReactNode }) {
   return (
     <div className={s.screenHeader}>
       <div className={s.screenTitle}>
-        <div className="t-eyebrow">{eyebrow}</div>
         <h2 className="t-h2">{title}</h2>
+        {sub && <div className={s.screenSub}>{sub}</div>}
       </div>
       {aside}
     </div>
@@ -300,9 +427,7 @@ export function ScreenHeader({ eyebrow, title, aside }: { eyebrow: ReactNode; ti
 export function EmptyState({ label, text, action }: { label: string; text: ReactNode; action?: ReactNode }) {
   return (
     <div className={s.empty}>
-      <div className="t-label" style={{ letterSpacing: '.18em' }}>
-        {label}
-      </div>
+      <div className={s.emptyLabel}>{label}</div>
       <div className={s.emptyText}>{text}</div>
       {action}
     </div>
@@ -315,8 +440,9 @@ export function Skeleton({ style }: { style?: CSSProperties }) {
 
 /**
  * Таблица треков.
- * release — треклист релиза (с подписью «артист»; формат — в своей колонке), popular — без подписи,
- * library — шесть колонок фонотеки.
+ * release — треклист релиза (номер, подпись «артист», формат в своей колонке),
+ * popular — компактный список без подписи, library — с артистом и релизом.
+ * Первая колонка: в релизе номер, в остальных — круглая кнопка play (как в макете).
  */
 export function TrackTable({
   tracks,
@@ -330,12 +456,12 @@ export function TrackTable({
   header?: boolean;
 }) {
   const current = useCurrentTrack();
-  const cols = variant === 'library' ? s.colsLibrary : s.colsRelease;
+  const cols = variant === 'library' ? s.colsLibrary : variant === 'popular' ? s.colsPopular : s.colsRelease;
   return (
     <div>
       {header && (
         <div className={cx(s.trackHead, cols)}>
-          <span>#</span>
+          <span />
           <span>НАЗВАНИЕ</span>
           {variant === 'library' && (
             <>
@@ -343,7 +469,7 @@ export function TrackTable({
               <span className={s.libOnly}>РЕЛИЗ</span>
             </>
           )}
-          <span>ФОРМАТ</span>
+          {variant !== 'popular' && <span>ФОРМАТ</span>}
           <span className={s.right}>ВРЕМЯ</span>
         </div>
       )}
@@ -356,7 +482,22 @@ export function TrackTable({
             {playing && (
               <motion.span aria-hidden="true" className={s.playingBg} layoutId="pv-playing-row" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
             )}
-            <span className={s.tNum}>{trackNum(i)}</span>
+            {/* Первая колонка: в треклисте номер, круг play появляется по hover;
+                в списках поиска и фонотеки круг виден всегда, как в макете */}
+            <span className={s.tLead}>
+              {variant === 'release' ? (
+                <>
+                  <span className={s.tNum}>{trackNum(i)}</span>
+                  <span className={cx(s.tPlay, playing && s.tPlayShown)} aria-hidden="true">
+                    {playing ? <PauseIcon size={12} /> : <PlayIcon size={12} />}
+                  </span>
+                </>
+              ) : (
+                <span className={cx(s.tPlay, s.tPlayAlways, playing && s.tPlayShown)} aria-hidden="true">
+                  {playing ? <PauseIcon size={12} /> : <PlayIcon size={12} />}
+                </span>
+              )}
+            </span>
             {variant === 'release' ? (
               <span className={s.tTitleCell}>
                 <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
@@ -378,7 +519,7 @@ export function TrackTable({
                 <span className={cx(s.tRelease, s.libOnly, 'ellipsis')}>{t.release}</span>
               </>
             )}
-            <span className={s.tFmt}>{t.format ?? (t.explicit ? '18+' : '—')}</span>
+            {variant !== 'popular' && <span className={s.tFmt}>{t.format ?? (t.explicit ? '18+' : '—')}</span>}
             <span className={s.tDur}>{fmtTime(t.durationSec)}</span>
           </button>
         );

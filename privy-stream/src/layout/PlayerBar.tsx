@@ -1,9 +1,8 @@
-import { useEffect, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import type { Track } from '../api';
 import { fmtTime } from '../lib/format';
-import { meterHeights } from '../lib/viz';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
-import { cx, NextIcon, PauseIcon, PlayIcon, PrevIcon } from '../ui';
+import { CoverArt, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon } from '../ui';
 import s from './layout.module.css';
 
 /** Доля ширины элемента под курсором — для seek по полосе/волне. */
@@ -18,17 +17,16 @@ export function PlayerBar() {
   const track = useCurrentTrack();
   const { playing, position, loading, error, toggle, next, prev, seek, setFullscreen } = usePlayer();
   const duration = useDuration();
-  const tick = useMeterTick(playing && !loading);
   const pct = duration ? Math.min(100, (position / duration) * 100) : 0;
 
   return (
     <div className={s.player}>
       <button type="button" className={s.nowPlaying} onClick={() => track && setFullscreen(true)}>
-        <div className={s.thumb} />
+        <div className={s.thumb}>{track && <CoverArt seed={track.releaseId || track.id} className={s.thumbArt} />}</div>
         <div className={s.nowText}>
-          <span className={cx(s.nowTitle, 'ellipsis')}>{track?.title ?? '—'}</span>
+          <span className={cx(s.nowTitle, 'ellipsis')}>{track?.title ?? 'Очередь пуста'}</span>
           <span className={cx(s.nowSub, 'ellipsis')} style={error ? { color: 'var(--accent-text)' } : undefined} title={error || undefined}>
-            {error || (loading ? 'загрузка с узла…' : track ? trackSubline(track) : 'очередь пуста')}
+            {error || (loading ? 'загрузка с узла…' : track ? trackSubline(track) : 'выбери трек в каталоге')}
           </span>
         </div>
       </button>
@@ -39,7 +37,7 @@ export function PlayerBar() {
             <PrevIcon />
           </button>
           <button type="button" className={s.playBtn} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
-            {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
+            {playing ? <PauseIcon size={17} /> : <PlayIcon size={17} />}
           </button>
           <button type="button" className={s.skip} onClick={next} aria-label="Следующий">
             <NextIcon />
@@ -49,23 +47,18 @@ export function PlayerBar() {
           <span className={s.time}>{fmtTime(position)}</span>
           <div className={s.progress} onClick={(e) => seek(pointerFraction(e))}>
             <div className={s.progressFill} style={{ width: `${pct}%` }} />
+            {pct > 0 && <div className={s.progressThumb} style={{ left: `${pct}%` }} />}
           </div>
-          <span className={s.time}>{fmtTime(duration)}</span>
+          <span className={cx(s.time, s.timeRight)}>{fmtTime(duration)}</span>
         </div>
       </div>
 
       <div className={s.right}>
         <VolumeControl />
-        <div className={s.meter}>
-          {meterHeights(tick, playing && !loading).map((h, i) => (
-            <div key={i} className={s.meterBar} style={{ height: `${h}%`, background: i > 10 ? 'var(--accent)' : 'var(--line-hover)' }} />
-          ))}
-        </div>
-        <div className={s.spec}>
-          24 BIT / 96 kHz
-          <br />
-          NO LOG
-        </div>
+        {/* Кнопка очереди раскрывает полноэкранный плеер со списком */}
+        <button type="button" className={s.iconBtn} onClick={() => setFullscreen(true)} aria-label="Очередь воспроизведения" title="Очередь">
+          <QueueIcon size={20} />
+        </button>
       </div>
     </div>
   );
@@ -98,7 +91,7 @@ export function VolumeControl() {
   return (
     <div className={s.volume}>
       <button type="button" className={s.volBtn} onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 9h4l5-4v14l-5-4H4z" />
           {level === 0 ? (
             <path d="m16 9 6 6m0-6-6 6" />
@@ -124,20 +117,10 @@ export function VolumeControl() {
         onWheel={(e) => setVolume(level - Math.sign(e.deltaY) * 0.05)}
       >
         <div className={s.volFill} style={{ width: `${level * 100}%` }} />
+        {level > 0 && <div className={s.volThumb} style={{ left: `${level * 100}%` }} />}
       </div>
     </div>
   );
-}
-
-/** Такт анимации индикатора уровня (декоративный, как в макете). */
-function useMeterTick(playing: boolean) {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    if (!playing) return;
-    const id = setInterval(() => setTick((t) => t + 1), 900);
-    return () => clearInterval(id);
-  }, [playing]);
-  return tick;
 }
 
 /** Мобильный мини-плеер над таб-баром: тап по треку раскрывает полноэкранный плеер. */
@@ -190,16 +173,16 @@ export function MiniPlayer() {
         {scrubbing && <span className={s.miniTime}>{fmtTime(position)}</span>}
       </div>
       <button type="button" className={s.nowPlaying} onClick={() => track && setFullscreen(true)}>
-        <div className={cx(s.thumb, s.miniThumb)} />
+        <div className={cx(s.thumb, s.miniThumb)}>{track && <CoverArt seed={track.releaseId || track.id} className={s.thumbArt} />}</div>
         <div className={s.nowText}>
-          <span className={cx(s.miniTitle, 'ellipsis')}>{track?.title ?? '—'}</span>
+          <span className={cx(s.miniTitle, 'ellipsis')}>{track?.title ?? 'Очередь пуста'}</span>
           <span className={cx(s.nowSub, 'ellipsis')} style={error ? { color: 'var(--accent-text)' } : undefined}>
-            {error || (loading ? 'загрузка с узла…' : track ? track.artist : 'очередь пуста')}
+            {error || (loading ? 'загрузка с узла…' : track ? track.artist : 'выбери трек в каталоге')}
           </span>
         </div>
       </button>
       <button type="button" className={cx(s.playBtn, s.miniPlay)} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
-        {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
+        {playing ? <PauseIcon size={17} /> : <PlayIcon size={17} />}
       </button>
     </div>
   );

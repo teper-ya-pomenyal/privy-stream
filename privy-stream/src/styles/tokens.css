@@ -1,79 +1,85 @@
-/* Дизайн-токены privy_stream. Значения — из раздела Design Tokens хэндоффа.
-   Радиусов и теней нет намеренно: «аппаратный» вид. */
+/* Дизайн-токены privy_stream. Мир: «личная фонотека» — тёплый графит, одна
+   терракотовая нота, мягкие радиусы. Моноширинный шрифт — только для данных. */
 :root {
   /* Фоны */
-  --bg: #0b0b0c;
-  --bg-panel: #0e0e10;
-  --bg-player: #101012;
-  --bg-card: #121214;
-  --bg-active: #17171a;
-  --bg-nav-hover: #141417;
-  --bg-input: #0c0c0e;
-  --bg-queue: #0d0d0f;
-  --bg-full: #0a0a0b;
+  --bg: #111313;
+  --bg-panel: #151817;
+  --bg-player: #141716;
+  --bg-card: #191c1b;
+  --bg-active: #1e2221;
+  --bg-nav-hover: #1a1d1c;
+  --bg-input: #0d0f0e;
+  --bg-queue: #121514;
+  --bg-full: #0e100f;
 
   /* Линии */
-  --line: #1e1e22;
-  --line-row: #17171b;
-  --line-queue: #16161a;
-  --line-meta: #1b1b1f;
-  --line-ctrl: #26262a;
-  --line-input: #2e2e33;
-  --line-hover: #4a4a50;
+  --line: #232826;
+  --line-row: #1c201f;
+  --line-queue: #1b1f1e;
+  --line-meta: #202523;
+  --line-ctrl: #2a302d;
+  --line-input: #343b38;
+  --line-hover: #4d5450;
 
   /* Акцент и статусы */
   --accent: #d8452b;
   --accent-hover: #f0563a;
   --accent-text: #f0765c;
-  --accent-bg: rgba(216, 69, 43, 0.08);
+  --accent-bg: rgba(216, 69, 43, 0.09);
   --accent-bg-soft: rgba(216, 69, 43, 0.07);
   --error-bg: rgba(216, 69, 43, 0.1);
-  --row-hover: rgba(255, 255, 255, 0.03);
-  --ok: #7fae6b;
+  --row-hover: rgba(241, 238, 232, 0.04);
+  --ok: #8bb877;
   --warn: #e8c24b;
-  --dot-off: #3a3a40;
+  --dot-off: #454b47;
 
-  /* Текст. Три самых тёмных ступени подняты для читаемости мелких моно-подписей
-     (секции, шапки таблиц, плейсхолдеры): было 2.3–3.7:1, стало 3.2–4.4:1. */
-  --text: #e8e6e1;
-  --text-bright: #f2f0eb;
-  --text-2: #c8c6c0;
-  --text-3: #8e8c86;
-  --text-4: #7d7b76;
-  --text-5: #6f6d68;
-  --text-6: #666460;
-  --on-accent: #0b0b0c;
+  /* Текст. Ступени подобраны по контрасту на --bg: даже самая слабая
+     рабочая ступень --text-6 даёт ~4.7:1 (WCAG AA для мелкого текста). */
+  --text: #f1eee8;
+  --text-bright: #fbf9f5;
+  --text-2: #d9d6cf;
+  --text-3: #b4b9b2;
+  --text-4: #9aa099;
+  --text-5: #858b84;
+  --text-6: #7e847d;
+  --on-accent: #fff8f2;
 
   /* Шрифты (вендорятся локально через @fontsource) */
   --font-display: 'Manrope Variable', Manrope, Helvetica, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  /* Плейсхолдеры арта */
-  --ph-cover: repeating-linear-gradient(135deg, #17171a 0 7px, #121215 7px 14px);
-  --ph-thumb: repeating-linear-gradient(135deg, #1d1d21 0 5px, #141417 5px 10px);
-  --ph-artist: repeating-linear-gradient(115deg, #16161a 0 9px, #111114 9px 18px);
+  /* Радиусы и тени */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.45);
+
+  /* Плейсхолдеры арта: генерируются по seed (см. CoverArt), это запасные тона */
+  --ph-cover: #181c1b;
+  --ph-thumb: #181c1b;
+  --ph-artist: #181c1b;
 
   /* Фиксированные размеры */
-  --header-h: 46px;
-  --sidebar-w: 216px;
-  --player-h: 76px;
+  --header-h: 56px;
+  --sidebar-w: 232px;
+  --player-h: 88px;
 
   /* Плотность: «воздушно» по умолчанию */
-  --pad-screen: 34px 44px 46px;
+  --pad-screen: 36px 44px 48px;
   --row-pad-y: 12px;
   --node-pad-y: 17px;
   --nav-pad-y: 11px;
-  --card-min: 194px;
+  --card-min: 196px;
   --grid-gap: 26px;
   --grid-top: 30px;
 }
 
 :root[data-density='dense'] {
-  --pad-screen: 20px 26px 30px;
+  --pad-screen: 22px 28px 32px;
   --row-pad-y: 8px;
   --node-pad-y: 12px;
   --nav-pad-y: 8px;
-  --card-min: 150px;
+  --card-min: 152px;
   --grid-gap: 16px;
   --grid-top: 20px;
 }
@@ -82,12 +88,12 @@
 @media (max-width: 720px) {
   :root,
   :root[data-density='dense'] {
-    --header-h: 48px;
-    --pad-screen: 20px 16px 28px;
+    --header-h: 56px;
+    --pad-screen: 22px 16px 28px;
     --row-pad-y: 11px;
     --node-pad-y: 13px;
-    --card-min: 140px;
-    --grid-gap: 16px 12px;
-    --grid-top: 18px;
+    --card-min: 144px;
+    --grid-gap: 18px 12px;
+    --grid-top: 20px;
   }
 }

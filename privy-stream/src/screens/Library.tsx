@@ -11,24 +11,27 @@ export function Library() {
 
   return (
     <Screen>
-      <div className={s.libHeader}>
-        <ScreenHeader
-          eyebrow="ЛОКАЛЬНОЕ ХРАНИЛИЩЕ · НЕ ИНДЕКСИРУЕТСЯ"
-          title="Библиотека"
-          aside={
-            <div className={s.libStats}>
-              {tracks.length} {plural(tracks.length, ['трек', 'трека', 'треков'])} · 14.2 ГБ
-              <br />
-              синхронизация 3 устройства
-            </div>
-          }
-        />
+      <ScreenHeader
+        title="Фонотека"
+        sub={
+          <>
+            Локальное хранилище устройства · не индексируется узлом
+            {library.data && (
+              <>
+                {' · '}
+                {tracks.length} {plural(tracks.length, ['трек', 'трека', 'треков'])}
+              </>
+            )}
+          </>
+        }
+      />
+      <div className={s.tracksList}>
+        {library.data ? (
+          <TrackTable variant="library" tracks={tracks} onPlay={(t) => play(t, tracks)} />
+        ) : (
+          <TrackTableSkeleton rows={9} />
+        )}
       </div>
-      {library.data ? (
-        <TrackTable variant="library" tracks={tracks} onPlay={(t) => play(t, tracks)} />
-      ) : (
-        <TrackTableSkeleton rows={9} />
-      )}
     </Screen>
   );
 }

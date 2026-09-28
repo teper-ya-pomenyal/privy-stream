@@ -6,7 +6,7 @@ import { IS_WEB } from '../platform/mode';
 import { useMobile } from '../lib/useMobile';
 import { usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
-import { Button, Cover, EmptyState, ErrorNote, hostLabel, PrefixedInput, Screen, ScreenHeader, Skeleton, TrackTable } from '../ui';
+import { ArtistAvatar, Button, CloseIcon, Cover, EmptyState, ErrorNote, hostLabel, Screen, SearchIcon, Skeleton, TrackTable } from '../ui';
 import s from './screens.module.css';
 
 const FILTERS = ['ВСЁ', 'АРТИСТЫ', 'РЕЛИЗЫ', 'ТРЕКИ'] as const;
@@ -55,7 +55,7 @@ function CatalogView({ host, name }: { host: string; name: string }) {
   const searching = query.length > 0;
   const active = searching ? search : browse;
 
-  // Полка не умеет показывать артистов и треки — поиск-only фильтр на ней не остаётся.
+  // Полка не умеет показывать артистов и треков — поиск-only фильтр на ней не остаётся.
   useEffect(() => {
     if (!searching && SEARCH_ONLY.includes(filter)) setFilter('ВСЁ');
   }, [searching]);
@@ -80,9 +80,31 @@ function CatalogView({ host, name }: { host: string; name: string }) {
   const openArtist = (id: string) => navigate(`/artist/${encodeURIComponent(id)}`);
 
   const toServers = IS_WEB ? null : (
-    <Button size="sm" style={{ padding: '12px 18px', letterSpacing: '.14em' }} onClick={() => navigate('/servers')}>
-      ВЫБРАТЬ ДРУГОЙ УЗЕЛ
+    <Button size="sm" onClick={() => navigate('/servers')}>
+      Выбрать другой узел
     </Button>
+  );
+
+  const searchBox = (
+    <div className={s.searchBox}>
+      <span className={s.searchIco}>
+        <SearchIcon size={20} />
+      </span>
+      <input
+        className={s.searchInput}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Трек, артист или релиз…"
+        aria-label="Поиск по узлу"
+        // На телефоне автофокус сразу открывает клавиатуру поверх полки.
+        autoFocus={!mobile}
+      />
+      {input && (
+        <button type="button" className={s.searchClear} onClick={() => setInput('')} aria-label="Очистить поиск">
+          <CloseIcon size={16} />
+        </button>
+      )}
+    </div>
   );
 
   let body;
@@ -97,11 +119,11 @@ function CatalogView({ host, name }: { host: string; name: string }) {
     body = <GridSkeleton />;
   } else if (active.isError) {
     body = (
-      <div style={{ marginTop: 30, display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'flex-start' }}>
+      <div className={s.errorRow}>
         <ErrorNote>{errorText(active.error)}</ErrorNote>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className={s.errorActions}>
           <Button size="sm" onClick={() => void active.refetch()}>
-            ПОВТОРИТЬ
+            Повторить
           </Button>
           {toServers}
         </div>
@@ -111,11 +133,11 @@ function CatalogView({ host, name }: { host: string; name: string }) {
     body =
       total > 0 ? (
         // Совпадения есть, но выбранный раздел их не показывает — это не «пустой узел».
-        <EmptyState label="РАЗДЕЛ ПУСТ" text="По запросу есть совпадения в других разделах — переключи фильтр на ВСЁ." />
+        <EmptyState label="РАЗДЕЛ ПУСТ" text="По запросу есть совпадения в других разделах — переключись на «Все»." />
       ) : (
         <EmptyState
-          label="ПУСТОЙ ИНДЕКС"
-          text={searching ? 'На этом узле ничего не найдено по запросу.' : `Узел «${name}» пока ничего не отдаёт — владелец не залил фонотеку.`}
+          label="НИЧЕГО НЕ НАЙДЕНО"
+          text={searching ? 'На этом узле ничего не найдено по запросу.' : `На узле «${name}» пока нет музыки — владелец не залил фонотеку.`}
           action={toServers}
         />
       );
@@ -124,12 +146,15 @@ function CatalogView({ host, name }: { host: string; name: string }) {
       <div className={s.results} style={{ opacity: search.isPlaceholderData ? 0.6 : 1 }}>
         {result.artists.length > 0 && (
           <section className={s.resultSection}>
-            <div className="t-section">АРТИСТЫ · {result.artists.length}</div>
+            <div className="t-section">Артисты</div>
             <div className={s.artistList}>
               {result.artists.map((a) => (
                 <button key={a.id} type="button" className={s.artistRow} onClick={() => openArtist(a.id)}>
-                  <span className={s.nodeName}>{a.name}</span>
-                  <span className={s.artistRowGo}>АРТИСТ →</span>
+                  <ArtistAvatar name={a.name} className={s.artistAva} />
+                  <span className={s.artistName}>{a.name}</span>
+                  <span className={s.artistGo}>
+                    <Chevron />
+                  </span>
                 </button>
               ))}
             </div>
@@ -137,8 +162,8 @@ function CatalogView({ host, name }: { host: string; name: string }) {
         )}
         {result.releases.length > 0 && (
           <section className={s.resultSection}>
-            {searching && <div className="t-section">РЕЛИЗЫ · {result.releases.length}</div>}
-            <div className={s.grid} style={searching ? { paddingTop: 0 } : undefined}>
+            <div className="t-section">Релизы</div>
+            <div className={s.grid}>
               {result.releases.map((r) => (
                 <ReleaseCard key={r.id} release={r} onOpen={() => openRelease(r.id)} />
               ))}
@@ -147,7 +172,7 @@ function CatalogView({ host, name }: { host: string; name: string }) {
         )}
         {result.tracks.length > 0 && (
           <section className={s.resultSection}>
-            <div className="t-section">ТРЕКИ · {result.tracks.length}</div>
+            <div className="t-section">Треки</div>
             <TrackTable variant="library" tracks={result.tracks} onPlay={(t) => play(t, result.tracks)} />
           </section>
         )}
@@ -157,42 +182,34 @@ function CatalogView({ host, name }: { host: string; name: string }) {
 
   return (
     <Screen>
-      <ScreenHeader
-        eyebrow={`${hostLabel(host)} · ${searching || !browse.data ? 'ПОИСК ПО УЗЛУ' : `${browse.data.length} РЕЛИЗОВ`}`}
-        title={`Полка узла «${name}»`}
-        aside={
-          <PrefixedInput
-            prefix="/"
-            className={s.search}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="трек или артист…"
-            suffix={searching && search.data ? String(total) : undefined}
-            // На телефоне автофокус сразу открывает клавиатуру поверх полки.
-            autoFocus={!mobile}
-          />
-        }
-      />
-
-      <div className={s.filters}>
-        {FILTERS.map((f) => {
-          // Разделы поиска на полке недоступны: полка показывает только релизы.
-          const offShelf = !searching && SEARCH_ONLY.includes(f);
-          return (
-            <Button
-              key={f}
-              variant="quiet"
-              size="xs"
-              selected={filter === f}
-              disabled={offShelf}
-              title={offShelf ? 'работает в поиске — введи запрос' : undefined}
-              style={{ padding: '7px 12px', letterSpacing: '.12em', cursor: offShelf ? undefined : 'pointer' }}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </Button>
-          );
-        })}
+      <div className={s.catalogHead}>
+        <h2 className="t-h2">Поиск по узлу</h2>
+        <div className={s.catalogSub}>
+          Музыка из <span className={s.catalogHost}>{hostLabel(host)}</span> · поиск идёт только на выбранном узле
+        </div>
+        {searchBox}
+        {/* Имена классов не пересекаются с вкладками входа (s.tabs/s.tab заняты ими) */}
+        <div className={s.filterBar}>
+          {FILTERS.map((f) => {
+            // Разделы поиска на полке недоступны: полка показывает только релизы.
+            const offShelf = !searching && SEARCH_ONLY.includes(f);
+            const count = f === 'ВСЁ' ? total : f === 'АРТИСТЫ' ? result.artists.length : f === 'РЕЛИЗЫ' ? result.releases.length : result.tracks.length;
+            return (
+              <button
+                key={f}
+                type="button"
+                className={s.filterTab}
+                data-on={filter === f ? '' : undefined}
+                disabled={offShelf}
+                title={offShelf ? 'Раздел появится, когда введёшь запрос' : undefined}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'ВСЁ' ? 'Все' : f === 'АРТИСТЫ' ? 'Артисты' : f === 'РЕЛИЗЫ' ? 'Релизы' : 'Треки'}
+                {searching && count > 0 && <span className={s.filterCount}>{count}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {body}
@@ -200,14 +217,20 @@ function CatalogView({ host, name }: { host: string; name: string }) {
   );
 }
 
+const Chevron = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m9 5 7 7-7 7" />
+  </svg>
+);
+
 function GridSkeleton() {
   return (
-    <div className={s.grid}>
+    <div className={s.grid} style={{ paddingTop: 'var(--grid-top)' }}>
       {Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className={s.card2} style={{ cursor: 'default' }}>
+        <div key={i} className={s.card} style={{ cursor: 'default' }}>
           <Skeleton style={{ aspectRatio: '1' }} />
-          <Skeleton style={{ height: 12, width: '70%' }} />
-          <Skeleton style={{ height: 10, width: '45%' }} />
+          <Skeleton style={{ height: 13, width: '70%' }} />
+          <Skeleton style={{ height: 11, width: '45%' }} />
         </div>
       ))}
     </div>
@@ -218,26 +241,16 @@ export function releaseMeta(r: Release): string {
   return [r.year, r.genre?.toUpperCase()].filter(Boolean).join(' · ');
 }
 
-function ReleaseCard({ release: r, onOpen }: { release: Release; onOpen: () => void }) {
-  const meta = releaseMeta(r);
+export function ReleaseCard({ release: r, onOpen }: { release: Release; onOpen: () => void }) {
   return (
-    <div className={s.card2} onClick={onOpen} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen()}>
-      <Cover
-        code={r.code}
-        flagged={r.flagged}
-        caption={
-          <>
-            обложка
-            <br />
-            1000×1000
-          </>
-        }
-      />
+    <div className={s.card} onClick={onOpen} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen()}>
+      <Cover seed={r.id} code={r.code} flagged={r.flagged} />
       <div className={s.cardText}>
         <div className={s.cardTitle}>{r.title}</div>
         <div className={s.cardArtist}>{r.artist}</div>
-        {meta && <div className={s.cardMeta}>{meta}</div>}
       </div>
     </div>
   );
 }
+
+/** Заголовок раздела — единый стиль секций каталога. */

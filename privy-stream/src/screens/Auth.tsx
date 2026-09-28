@@ -109,7 +109,6 @@ export function Auth() {
       <div className={s.authLeft}>
         <Logo />
         <div className={s.pitch}>
-          <div className={s.pitchEyebrow}>БЕЗ ГРАНИЦ · БЕЗ ЦЕНЗУРЫ</div>
           <h1 className={s.pitchTitle}>
             Ты сам решаешь
             <br />
@@ -123,8 +122,8 @@ export function Auth() {
           </p>
           <div className={s.pitchFacts}>
             {[
-              ['ШИФРОВАНИЕ', 'RS256'],
-              ['СЕССИЯ', 'РОТАЦИЯ'],
+              ['ВХОД', 'JWT · RS256'],
+              ['СЕССИЯ', 'РОТАЦИЯ ТОКЕНОВ'],
               ['ТЕЛЕМЕТРИЯ', 'ВЫКЛ'],
             ].map(([k, v]) => (
               <div key={k} className={s.fact}>
@@ -134,7 +133,7 @@ export function Auth() {
             ))}
           </div>
         </div>
-        <div className={s.techLine}>{node ? `${hostLabel(node.host)} · UPTIME 99.97%` : 'УЗЕЛ НЕ ВЫБРАН'} · BUILD 0.4.1</div>
+        <div className={s.techLine}>{node ? `${hostLabel(node.host)} · ` : ''}СБОРКА 0.4.1</div>
       </div>
 
       <div className={s.authRight}>
@@ -152,7 +151,7 @@ export function Auth() {
                   setErr('');
                 }}
               >
-                {m === 'login' ? 'ВХОД' : 'РЕГИСТРАЦИЯ'}
+                {m === 'login' ? 'Вход' : 'Регистрация'}
               </button>
             ))}
           </div>
@@ -213,11 +212,11 @@ export function Auth() {
             <ErrorNote>{shownError}</ErrorNote>
 
             <Button type="submit" variant="accent" size="lg" disabled={busy} style={{ marginTop: 4 }}>
-              {busy ? '···' : reg ? 'СОЗДАТЬ КЛЮЧ' : 'ВОЙТИ'}
+              {busy ? '···' : reg ? 'Создать ключ' : 'Войти'}
             </Button>
             <div className={s.cardFoot}>
               <span>POST /v1/auth</span>
-              <span>{reg ? 'RS256 · КЛЮЧ ЛОКАЛЬНО' : 'REFRESH · РОТАЦИЯ'}</span>
+              <span>{reg ? 'RS256 · ключи на устройстве' : 'refresh · ротация'}</span>
             </div>
           </form>
         </div>
@@ -323,7 +322,7 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
                 setOpen(true);
               }}
             >
-              + ДОБАВИТЬ УЗЕЛ
+              + Добавить узел
             </button>
           )}
         </div>
@@ -352,7 +351,7 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
               }}
             />
             <Button variant="accent" size="sm" className={s.addNodeBtn} disabled={adding} onClick={() => void submitAdd()}>
-              {adding ? 'ПРОВЕРКА…' : 'ДОБАВИТЬ'}
+              {adding ? 'Проверка…' : 'Добавить'}
             </Button>
             {!empty && (
               <Button variant="quiet" size="sm" className={s.addNodeBtn} onClick={close} aria-label="Отмена">

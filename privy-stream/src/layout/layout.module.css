@@ -26,89 +26,109 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px 0 18px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg-panel);
+  gap: 16px;
+  padding: 0 20px;
+  background: var(--bg);
 }
-.headerLeft,
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
   min-width: 0;
-}
-.headerRight {
-  gap: 10px;
 }
 .home {
   color: inherit;
   text-decoration: none;
   flex: none;
+  border-radius: var(--r-xs);
 }
 .home:hover {
-  opacity: 0.8;
+  opacity: 0.85;
 }
-.crumbs {
-  font: 400 10px/1 var(--font-mono);
-  color: var(--text-6);
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
+/* Чип узла: статус, адрес, пинг; в приложении клик ведёт к списку узлов */
 .nodeChip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  min-width: 0;
+  transition: background 0.14s;
+}
+.nodeChip:not(.nodeChipStatic):hover {
+  background: var(--bg-card);
+}
+.nodeChipStatic {
+  cursor: default;
+}
+.nodeChipStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nodeChipLabel {
+  font: 500 10.5px/1 var(--font-display);
+  color: var(--text-5);
+}
+.nodeChipHost {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--line-input);
-  cursor: pointer;
   min-width: 0;
+  max-width: 260px;
 }
-.nodeChip:hover {
-  border-color: var(--line-hover);
-}
-.nodeChipStatic,
-.nodeChipStatic:hover {
-  cursor: default;
-  border-color: var(--line-input);
-}
-.nodeChipHost {
-  font: 600 10px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-  color: var(--text-2);
+.nodeChipName {
+  font: 500 13px/1.2 var(--font-mono);
+  color: var(--text);
 }
 .nodeChipPing {
-  font: 400 10px/1 var(--font-mono);
-  color: var(--text-6);
+  font: 400 11px/1 var(--font-mono);
+  color: var(--text-5);
   white-space: nowrap;
+}
+/* Стрелка раскрытия — только в приложении (в вебе узел один) */
+.nodeChipHost :global(svg):last-child {
+  color: var(--text-5);
+}
+.signOut {
+  font: 600 13px/1 var(--font-display);
+  color: var(--text-4);
+  padding: 8px 10px;
+  border-radius: var(--r-xs);
+  transition: color 0.14s;
+}
+.signOut:hover {
+  color: var(--text);
 }
 
 /* ---------- Sidebar ---------- */
 .sidebar {
   width: var(--sidebar-w);
   flex: none;
-  border-right: 1px solid var(--line);
-  background: var(--bg-panel);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px 0 16px;
+  padding: 14px 10px 16px;
+  gap: 12px;
 }
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-.navTitle {
-  padding: 0 18px 10px;
+  gap: 3px;
 }
 .navItem {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--nav-pad-y) 18px;
+  gap: 13px;
+  padding: var(--nav-pad-y) 14px;
+  border-radius: var(--r-sm);
   color: var(--text-3);
-  border-left: 2px solid transparent;
   text-decoration: none;
+  transition:
+    background 0.14s,
+    color 0.14s;
 }
 .navItem:hover {
   color: var(--text);
@@ -117,134 +137,117 @@
 .navItem.active {
   color: var(--text-bright);
   background: var(--bg-active);
-  border-left-color: var(--accent);
+}
+/* Терракотовая риска активного раздела — по левому краю пункта */
+.navItem.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.navIco {
+  display: flex;
+  color: var(--text-4);
+  transition: color 0.14s;
+}
+.navItem:hover .navIco,
+.navItem.active .navIco {
+  color: var(--text-2);
+}
+.navItem.active .navIco {
+  color: var(--accent-text);
 }
 .navLabel {
-  font: 600 12px/1 var(--font-mono);
-  letter-spacing: 0.1em;
-}
-.navCount {
-  font: 400 10px/1 var(--font-mono);
-  color: var(--text-6);
-}
-.sideFoot {
-  padding: 0 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.rule {
-  height: 1px;
-  background: var(--line);
-}
-.kvList {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-.kv {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font: 400 10px/1 var(--font-mono);
-  color: var(--text-4);
-}
-.kv > :last-child {
-  color: var(--text-2);
-  min-width: 0;
-}
-.switchNode {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding-top: 2px;
-  font: 600 9px/1 var(--font-mono);
-  letter-spacing: 0.14em;
-  color: var(--text-3);
-}
-.switchNode:hover {
-  color: var(--text);
+  font: 600 14px/1 var(--font-display);
 }
 
 /* ---------- Player bar ---------- */
 .player {
   flex: none;
   height: var(--player-h);
-  border-top: 1px solid var(--line-ctrl);
+  border-top: 1px solid var(--line);
   background: var(--bg-player);
   display: grid;
-  /* Боковые колонки равны — транспорт остаётся по центру. Справа: громкость, индикатор, формат. */
-  grid-template-columns: 300px 1fr 300px;
+  /* Боковые колонки равны — транспорт остаётся по центру */
+  grid-template-columns: minmax(200px, 280px) 1fr minmax(200px, 280px);
   align-items: center;
-  gap: 18px;
-  padding: 0 18px;
-}
-/* Узкое окно браузера: убираем декоративный индикатор, колонки сужаются */
-@media (max-width: 1000px) {
-  .player {
-    grid-template-columns: 220px 1fr 220px;
-  }
-  .player .meter {
-    display: none;
-  }
+  gap: 20px;
+  padding: 0 20px;
 }
 .nowPlaying {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 13px;
   min-width: 0;
   cursor: pointer;
+  border-radius: var(--r-xs);
 }
 .thumb {
-  width: 44px;
-  height: 44px;
+  position: relative;
+  width: 52px;
+  height: 52px;
   flex: none;
+  border-radius: var(--r-sm);
+  overflow: hidden;
   background: var(--ph-thumb);
-  border: 1px solid var(--line-input);
+}
+.thumbArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 .nowText {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
 }
 .nowTitle {
-  font: 600 13px/1.2 var(--font-display);
+  font: 700 14px/1.2 var(--font-display);
+  color: var(--text);
 }
 .nowSub {
-  font: 400 10px/1 var(--font-mono);
+  font: 500 12px/1 var(--font-display);
   color: var(--text-4);
 }
 .center {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
   min-width: 0;
 }
 .transport {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 18px;
 }
 .skip {
   display: inline-flex;
   align-items: center;
   padding: 4px 2px;
   color: var(--text-3);
+  border-radius: var(--r-xs);
+  transition: color 0.14s;
 }
 .skip:hover {
   color: var(--text);
 }
 .playBtn {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
   background: var(--accent);
   color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 700 12px/1 var(--font-display);
+  transition: background 0.14s;
 }
 .playBtn:hover {
   background: var(--accent-hover);
@@ -252,17 +255,22 @@
 .progressRow {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
 }
 .time {
-  font: 500 10px/1 var(--font-mono);
-  color: var(--text-3);
-  width: 36px;
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-4);
+  width: 38px;
   flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.timeRight {
+  text-align: right;
 }
 .progress {
   flex: 1;
   height: 4px;
+  border-radius: 2px;
   background: var(--line-ctrl);
   cursor: pointer;
   position: relative;
@@ -271,36 +279,48 @@
 .progress::before {
   content: '';
   position: absolute;
-  inset: -6px 0;
+  inset: -7px 0;
 }
 .progressFill {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
+  border-radius: 2px;
   background: var(--accent);
+}
+/* Точка-заполнитель на конце полосы, как в макете */
+.progressThumb {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 .right {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 12px;
 }
-.meter {
+.iconBtn {
   display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 22px;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  transition:
+    color 0.14s,
+    background 0.14s;
 }
-.meterBar {
-  width: 3px;
-  transition: height 0.35s ease;
-}
-.spec {
-  font: 600 9px/1.5 var(--font-mono);
-  color: var(--text-4);
-  letter-spacing: 0.12em;
-  text-align: right;
+.iconBtn:hover {
+  color: var(--text);
+  background: var(--bg-card);
 }
 
 /* ---------- Volume ---------- */
@@ -312,14 +332,16 @@
 .volBtn {
   display: flex;
   color: var(--text-3);
+  border-radius: var(--r-xs);
 }
 .volBtn:hover {
   color: var(--text);
 }
 .volBar {
   position: relative;
-  width: 64px;
+  width: 84px;
   height: 4px;
+  border-radius: 2px;
   background: var(--line-ctrl);
   cursor: pointer;
   touch-action: none;
@@ -335,11 +357,18 @@
   top: 0;
   left: 0;
   height: 100%;
-  background: var(--text-3);
-}
-.volBar:hover .volFill,
-.volBar:focus-visible .volFill {
+  border-radius: 2px;
   background: var(--accent);
+}
+.volThumb {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 /* ---------- Fullscreen player ---------- */
@@ -354,12 +383,16 @@
 }
 .fullBar {
   flex: none;
-  height: 52px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 26px;
-  border-bottom: 1px solid var(--line);
+}
+.fullBarLabel {
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  color: var(--text-5);
 }
 .fullBody {
   flex: 1;
@@ -379,14 +412,21 @@
 .hero {
   display: flex;
   flex-wrap: wrap;
-  gap: 32px;
+  gap: 34px;
   align-items: flex-end;
 }
 .heroCover {
-  width: 210px;
-  height: 210px;
+  width: 220px;
+  height: 220px;
   flex: none;
-  border-color: var(--line-input);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-pop);
+}
+.heroArt {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .heroText {
   flex: 1 1 340px;
@@ -396,65 +436,63 @@
   min-width: 0;
 }
 .heroRelease {
-  font: 600 11px/1 var(--font-mono);
-  letter-spacing: 0.16em;
+  font: 600 14px/1.2 var(--font-display);
   color: var(--text-3);
 }
 .heroTitle {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(30px, 3.6vw, 54px);
-  line-height: 0.95;
-  letter-spacing: -0.035em;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--text-bright);
   overflow-wrap: anywhere;
 }
 .heroArtist {
-  font: 500 14px/1 var(--font-mono);
-  color: var(--accent);
+  font: 600 15px/1 var(--font-display);
+  color: var(--text-3);
 }
 .waveWrap {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 .wave {
   display: flex;
   align-items: flex-end;
   gap: 2px;
   height: 84px;
-  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-xs);
   padding-bottom: 2px;
   cursor: pointer;
 }
 .waveBar {
   flex: 1;
+  border-radius: 1px;
   transition: background 0.2s;
 }
 .waveMeta {
   display: flex;
   justify-content: space-between;
   font: 500 11px/1 var(--font-mono);
-  color: var(--text-3);
+  color: var(--text-4);
+  font-variant-numeric: tabular-nums;
 }
 .fullTransport {
   display: flex;
   align-items: center;
-  gap: 20px;
-}
-.fullExtra {
-  display: flex;
-  gap: 8px;
-  margin-left: 12px;
+  gap: 18px;
 }
 .fullPlay {
-  width: 62px;
-  height: 62px;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
   background: var(--accent);
   color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 700 20px/1 var(--font-display);
+  transition: background 0.14s;
 }
 .fullPlay:hover {
   background: var(--accent-hover);
@@ -468,21 +506,21 @@
 }
 .queueHead {
   flex: none;
-  padding: 18px 22px 12px;
-  border-bottom: 1px solid var(--line);
+  padding: 20px 22px 14px;
 }
 .queueList {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  padding: 0 10px;
 }
 .queueRow {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 22px;
-  border-bottom: 1px solid var(--line-queue);
+  padding: 11px 12px;
+  border-radius: var(--r-sm);
 }
 .queueRow:hover {
   background: var(--row-hover);
@@ -491,43 +529,56 @@
   background: var(--accent-bg);
 }
 .qNum {
-  font: 500 10px/1 var(--font-mono);
-  color: var(--text-5);
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-6);
   width: 20px;
   flex: none;
+  font-variant-numeric: tabular-nums;
 }
 .playing .qNum {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .qText {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 .qTitle {
-  font: 600 12px/1.2 var(--font-display);
+  font: 600 13px/1.2 var(--font-display);
   color: var(--text-2);
 }
 .playing .qTitle {
   color: var(--text-bright);
 }
 .qArtist {
-  font: 400 10px/1 var(--font-mono);
+  font: 500 11.5px/1 var(--font-display);
   color: var(--text-5);
 }
 .qDur {
-  font: 500 10px/1 var(--font-mono);
-  color: var(--text-4);
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-5);
+  font-variant-numeric: tabular-nums;
 }
 .queueFoot {
   flex: none;
-  padding: 14px 22px;
-  border-top: 1px solid var(--line);
+  padding: 14px 22px 18px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
+}
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font: 400 10px/1.5 var(--font-mono);
+  color: var(--text-5);
+}
+.kv > :last-child {
+  color: var(--text-2);
+  min-width: 0;
+  text-align: right;
 }
 
 /* ---------- Mobile: mini player + tab bar ---------- */
@@ -537,9 +588,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
-  border-top: 1px solid var(--line-ctrl);
-  background: var(--bg-card);
+  padding: 10px 14px;
+  background: var(--bg-player);
 }
 /* Полоска таймлайна мини-плеера: линия 2px, но зона захвата выше и ниже неё,
    чтобы попадать пальцем. Тап и перетаскивание — перемотка трека. */
@@ -558,6 +608,7 @@
   top: 9px;
   left: 0;
   height: 2px;
+  border-radius: 1px;
   background: var(--accent);
   pointer-events: none;
   transition: height 0.1s;
@@ -574,6 +625,7 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 4px 8px;
+  border-radius: var(--r-xs);
   background: var(--bg-panel);
   border: 1px solid var(--line-ctrl);
   font: 500 11px/1 var(--font-mono);
@@ -584,11 +636,11 @@
   flex: 1;
 }
 .miniThumb {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
 }
 .miniTitle {
-  font: 600 12px/1.2 var(--font-display);
+  font: 700 13px/1.2 var(--font-display);
 }
 .miniPlay {
   width: 40px;
@@ -604,18 +656,24 @@
 }
 .tabItem {
   flex: 1;
-  padding: 16px 0;
-  text-align: center;
-  font: 600 9px/1 var(--font-mono);
-  letter-spacing: 0.12em;
-  color: var(--text-4);
+  padding: 9px 0 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font: 600 10.5px/1 var(--font-display);
+  color: var(--text-5);
   text-decoration: none;
+  transition: color 0.14s;
+}
+.tabIco {
+  display: flex;
 }
 .tabItem + .tabItem {
   border-left: 1px solid var(--line);
 }
 .tabActive {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 @media (max-width: 720px) {
@@ -633,6 +691,7 @@
     position: sticky;
     top: 0;
     z-index: 20;
+    background: var(--bg);
   }
   .mobileFoot {
     position: sticky;
@@ -642,19 +701,26 @@
   }
 
   .header {
-    padding: 0 14px;
+    padding: 0 12px;
     padding-top: env(safe-area-inset-top);
     height: calc(var(--header-h) + env(safe-area-inset-top));
-    gap: 12px;
-  }
-  .headerLeft {
-    gap: 12px;
-  }
-  .crumbs {
-    display: none;
+    gap: 8px;
   }
   .nodeChip {
-    padding: 6px 8px;
+    /* Точка статуса, адрес и пинг — в одну строку */
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 6px;
+  }
+  .nodeChipLabel {
+    display: none;
+  }
+  .nodeChipHost {
+    max-width: 150px;
+  }
+  .signOut {
+    padding: 8px 6px;
   }
 
   /* Полноэкранный плеер: одна колонка, очередь под плеером, скролл всего экрана */
@@ -664,10 +730,6 @@
   }
   .fullBar {
     padding: 0 16px;
-  }
-  .fullBar :global(.t-eyebrow) {
-    font-size: 9px;
-    letter-spacing: 0.14em;
   }
   .fullBody {
     display: block;
@@ -708,11 +770,6 @@
   .volBar {
     display: none;
   }
-  .fullExtra {
-    margin-left: 0;
-    width: 100%;
-    justify-content: center;
-  }
   .queue {
     border-left: none;
     border-top: 1px solid var(--line);
@@ -726,6 +783,6 @@
     overflow: visible;
   }
   .queueRow {
-    padding: 12px 16px;
+    padding: 12px 10px;
   }
 }
