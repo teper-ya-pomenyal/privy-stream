@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { AppShell } from './layout/AppShell';
 import { Album } from './screens/Album';
 import { Artist } from './screens/Artist';
@@ -8,7 +9,7 @@ import { Catalog } from './screens/Catalog';
 import { Library } from './screens/Library';
 import { Servers } from './screens/Servers';
 import { Settings } from './screens/Settings';
-import { IS_WEB } from './platform/mode';
+import { IS_WEB, isTauri } from './platform/mode';
 import { useActiveNodeOrNull, useServers } from './store/servers';
 import { useSession } from './store/session';
 import { useSettings } from './store/settings';
@@ -33,12 +34,23 @@ const router = createHashRouter([
 
 export function App() {
   const dense = useSettings((s) => s.dense);
+  const theme = useSettings((s) => s.theme);
   const node = useActiveNodeOrNull();
   const { host, restoring, restore } = useSession();
 
   useEffect(() => {
     document.documentElement.dataset.density = dense ? 'dense' : 'airy';
   }, [dense]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    // Каркас окна под тему: без этого при старте тёмной темы виден светлый фон.
+    if (isTauri()) {
+      getCurrentWindow()
+        .setBackgroundColor(theme === 'dark' ? '#111313' : '#f2efe8')
+        .catch(() => {});
+    }
+  }, [theme]);
 
   useEffect(() => {
     void restore(node?.host ?? null);

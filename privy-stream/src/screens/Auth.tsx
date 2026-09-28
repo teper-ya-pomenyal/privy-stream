@@ -4,6 +4,7 @@ import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
 import { useActiveNodeOrNull, useServers } from '../store/servers';
 import { useSession } from '../store/session';
+import { useSettings } from '../store/settings';
 import {
   Button,
   cx,
@@ -14,11 +15,13 @@ import {
   hostLabel,
   isoDate,
   Logo,
+  MoonIcon,
   PasswordField,
   NODE_STATUS,
   nodeState,
   PrefixedInput,
   StatusDot,
+  SunIcon,
 } from '../ui';
 import s from './screens.module.css';
 
@@ -48,6 +51,7 @@ export function Auth() {
   const noNodes = useServers((x) => x.nodes.length === 0);
   const nodeError = useServers((x) => x.error);
   const signIn = useSession((x) => x.signIn);
+  const { theme, setTheme } = useSettings();
   const mobile = useMobile();
 
   const [mode, setMode] = useState<Mode>('login');
@@ -106,6 +110,15 @@ export function Auth() {
 
   return (
     <div className={s.auth}>
+      <button
+        type="button"
+        className={s.themeToggle}
+        aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
+        title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+      >
+        {theme === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
+      </button>
       <div className={s.authLeft}>
         <Logo />
         <div className={s.pitch}>

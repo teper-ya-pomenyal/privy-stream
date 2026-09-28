@@ -3,12 +3,37 @@ import { cx, Screen, ScreenHeader } from '../ui';
 import s from './screens.module.css';
 
 export function Settings() {
-  const { dense, setDense } = useSettings();
+  const { dense, setDense, theme, setTheme } = useSettings();
 
   return (
     <Screen>
       <ScreenHeader title="Настройки" sub="Клиент хранит всё на устройстве" />
       <div className={s.settingsList}>
+        <div className={s.settingRow}>
+          <div className={s.settingText}>
+            <span className={s.settingName}>Тема</span>
+            <span className={s.settingSub}>светлая «фонотека» или тёмный графит</span>
+          </div>
+          <div className={s.segmented} role="radiogroup">
+            {(
+              [
+                ['light', 'Светлая'],
+                ['dark', 'Тёмная'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={theme === value}
+                className={cx(s.segment, theme === value && s.segmentOn)}
+                onClick={() => setTheme(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className={s.settingRow}>
           <div className={s.settingText}>
             <span className={s.settingName}>Плотность интерфейса</span>

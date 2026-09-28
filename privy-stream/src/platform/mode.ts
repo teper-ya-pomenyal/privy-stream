@@ -1,5 +1,7 @@
 import { isTauri } from '@tauri-apps/api/core';
 
+export { isTauri };
+
 /**
  * app — десктопное приложение (Tauri): несколько узлов, список в файле.
  * web — сайт одного узла: узел берётся из config.json, сменить его нельзя.

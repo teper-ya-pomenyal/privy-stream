@@ -291,10 +291,12 @@
   left: 8px;
   padding: 3px 7px;
   border-radius: 4px;
-  background: rgba(13, 15, 14, 0.78);
+  /* Чернильный чип поверх любой обложки: текст фиксированно бумажный,
+     токены текста темы здесь не подходят (они тёмные на светлой бумаге) */
+  background: rgba(18, 36, 29, 0.82);
   font: 600 9px/1 var(--font-mono);
   letter-spacing: 0.08em;
-  color: var(--text-3);
+  color: #f2efe8;
   backdrop-filter: blur(4px);
 }
 .coverFlag {

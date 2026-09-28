@@ -1,48 +1,62 @@
-/* Дизайн-токены privy_stream. Мир: «личная фонотека» — тёплый графит, одна
-   терракотовая нота, мягкие радиусы. Моноширинный шрифт — только для данных. */
+/* Дизайн-токены privy_stream. Мир: «личная фонотека» — бумажная основа (по умолчанию)
+   или тёмный графит, чернильный зелёный, одна терракотовая нота, мягкие радиусы.
+   Моноширинный шрифт — только для данных. Светлая палитра по концепту B
+   (new_design/concept-b-light): бумага #F2EFE7, чернила #263C32, мягкий зелёный
+   #5C655D, терракота #A8462C. Тема включается через data-theme на <html> (см. App). */
 :root {
-  /* Фоны */
-  --bg: #111313;
-  --bg-panel: #151817;
-  --bg-player: #141716;
-  --bg-card: #191c1b;
-  --bg-active: #1e2221;
-  --bg-nav-hover: #1a1d1c;
-  --bg-input: #0d0f0e;
-  --bg-queue: #121514;
-  --bg-full: #0e100f;
+  color-scheme: light;
+
+  /* Фоны: тёплая бумага; активные поверхности — чуть темнее (как полоса
+     активного трека в макете), поля ввода — светлее */
+  --bg: #f2efe8;
+  --bg-panel: #f5f2eb;
+  --bg-player: #f8f6f0;
+  --bg-card: #ece8dd;
+  --bg-active: #e7e7de;
+  --bg-nav-hover: #ede9de;
+  --bg-input: #f9f6f0;
+  --bg-input-focus: #fdfcf7;
+  --bg-queue: #f1eee5;
+  --bg-full: #eeebe1;
 
   /* Линии */
-  --line: #232826;
-  --line-row: #1c201f;
-  --line-queue: #1b1f1e;
-  --line-meta: #202523;
-  --line-ctrl: #2a302d;
-  --line-input: #343b38;
-  --line-hover: #4d5450;
+  --line: #ddd8ca;
+  --line-row: #e4dfd3;
+  --line-queue: #e2ddcf;
+  --line-meta: #e0dbce;
+  --line-ctrl: #d8d2c2;
+  --line-input: #cfc8b6;
+  --line-hover: #b5ae9b;
 
   /* Акцент и статусы */
-  --accent: #d8452b;
-  --accent-hover: #f0563a;
-  --accent-text: #f0765c;
-  --accent-bg: rgba(216, 69, 43, 0.09);
-  --accent-bg-soft: rgba(216, 69, 43, 0.07);
-  --error-bg: rgba(216, 69, 43, 0.1);
-  --row-hover: rgba(241, 238, 232, 0.04);
-  --ok: #8bb877;
-  --warn: #e8c24b;
-  --dot-off: #454b47;
+  --accent: #ab4e35;
+  --accent-hover: #94402a;
+  --accent-text: #96412a;
+  --accent-line: rgba(171, 78, 53, 0.4);
+  --accent-bg: rgba(171, 78, 53, 0.1);
+  --accent-bg-soft: rgba(171, 78, 53, 0.08);
+  --error-bg: rgba(171, 78, 53, 0.1);
+  --row-hover: rgba(38, 60, 50, 0.05);
+  --ok: #43703a;
+  --warn: #856309;
+  --dot-off: #c6c0b0;
 
-  /* Текст. Ступени подобраны по контрасту на --bg: даже самая слабая
-     рабочая ступень --text-6 даёт ~4.7:1 (WCAG AA для мелкого текста). */
-  --text: #f1eee8;
-  --text-bright: #fbf9f5;
-  --text-2: #d9d6cf;
-  --text-3: #b4b9b2;
-  --text-4: #9aa099;
-  --text-5: #858b84;
-  --text-6: #7e847d;
-  --on-accent: #fff8f2;
+  /* Текст: ступени чернильного зелёного. Ступени подобраны по контрасту на
+     --bg: даже самая слабая рабочая ступень --text-6 даёт ~4.5:1 (WCAG AA
+     для мелкого текста). */
+  --text: #263c32;
+  --text-bright: #12241d;
+  --text-2: #3c5044;
+  --text-3: #5c655d;
+  --text-4: #616b62;
+  --text-5: #64705f;
+  --text-6: #64705f;
+  --on-accent: #fdf6ee;
+
+  /* Выделение текста и скроллбар: чернила мира, терракота остаётся редкой нотой */
+  --selection-bg: rgba(38, 60, 50, 0.9);
+  --selection-fg: #f5f2ea;
+  --scrollbar-thumb: #d8d2c4;
 
   /* Шрифты (вендорятся локально через @fontsource) */
   --font-display: 'Manrope Variable', Manrope, Helvetica, sans-serif;
@@ -52,12 +66,12 @@
   --r-xs: 6px;
   --r-sm: 8px;
   --r-md: 12px;
-  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.45);
+  --shadow-pop: 0 16px 40px rgba(58, 47, 32, 0.18);
 
   /* Плейсхолдеры арта: генерируются по seed (см. CoverArt), это запасные тона */
-  --ph-cover: #181c1b;
-  --ph-thumb: #181c1b;
-  --ph-artist: #181c1b;
+  --ph-cover: #e8e4d6;
+  --ph-thumb: #e8e4d6;
+  --ph-artist: #e8e4d6;
 
   /* Фиксированные размеры */
   --header-h: 56px;
@@ -72,6 +86,63 @@
   --card-min: 196px;
   --grid-gap: 26px;
   --grid-top: 30px;
+}
+
+/* Тёмная тема: прежний «графит» с той же семантикой токенов */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #111313;
+  --bg-panel: #151817;
+  --bg-player: #141716;
+  --bg-card: #191c1b;
+  --bg-active: #1e2221;
+  --bg-nav-hover: #1a1d1c;
+  --bg-input: #0d0f0e;
+  --bg-input-focus: #101211;
+  --bg-queue: #121514;
+  --bg-full: #0e100f;
+
+  --line: #232826;
+  --line-row: #1c201f;
+  --line-queue: #1b1f1e;
+  --line-meta: #202523;
+  --line-ctrl: #2a302d;
+  --line-input: #343b38;
+  --line-hover: #4d5450;
+
+  --accent: #d8452b;
+  --accent-hover: #f0563a;
+  --accent-text: #f0765c;
+  --accent-line: rgba(216, 69, 43, 0.35);
+  --accent-bg: rgba(216, 69, 43, 0.09);
+  --accent-bg-soft: rgba(216, 69, 43, 0.07);
+  --error-bg: rgba(216, 69, 43, 0.1);
+  --row-hover: rgba(241, 238, 232, 0.04);
+  --ok: #8bb877;
+  --warn: #e8c24b;
+  --dot-off: #454b47;
+
+  /* Ступени подобраны по контрасту на --bg: даже самая слабая рабочая
+     ступень --text-6 даёт ~4.7:1 (WCAG AA для мелкого текста). */
+  --text: #f1eee8;
+  --text-bright: #fbf9f5;
+  --text-2: #d9d6cf;
+  --text-3: #b4b9b2;
+  --text-4: #9aa099;
+  --text-5: #858b84;
+  --text-6: #7e847d;
+  --on-accent: #fff8f2;
+
+  --selection-bg: rgba(216, 69, 43, 0.38);
+  --selection-fg: #fbf9f5;
+  --scrollbar-thumb: #2e3431;
+
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.45);
+
+  --ph-cover: #181c1b;
+  --ph-thumb: #181c1b;
+  --ph-artist: #181c1b;
 }
 
 :root[data-density='dense'] {

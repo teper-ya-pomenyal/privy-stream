@@ -1,9 +1,33 @@
 /* ================= Auth ================= */
 .auth {
+  position: relative;
   height: 100vh;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   overflow: hidden;
+}
+/* Кнопка темы поверх обеих колонок: видна до входа, где угодно на экране */
+.themeToggle {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-input);
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  color: var(--text-3);
+  transition:
+    color 0.14s,
+    border-color 0.14s;
+}
+.themeToggle:hover {
+  color: var(--text-bright);
+  border-color: var(--line-hover);
 }
 .authLeft {
   padding: 52px 60px;
@@ -223,7 +247,7 @@
 .nodeRowActive,
 .nodeRowActive:hover {
   background: var(--accent-bg-soft);
-  border-color: rgba(216, 69, 43, 0.35);
+  border-color: var(--accent-line);
   cursor: default;
 }
 .nodeMain {
@@ -321,7 +345,7 @@
 }
 .searchBox:focus-within {
   border-color: var(--line-hover);
-  background: #101211;
+  background: var(--bg-input-focus);
 }
 .searchIco {
   display: flex;
@@ -873,6 +897,10 @@
   .authRight {
     align-items: flex-start;
     padding: 20px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  .themeToggle {
+    top: calc(14px + env(safe-area-inset-top));
+    right: 14px;
   }
   .card {
     max-width: none;

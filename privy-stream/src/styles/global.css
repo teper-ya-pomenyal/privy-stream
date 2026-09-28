@@ -54,10 +54,11 @@ p {
   margin: 0;
 }
 
-/* Выделение текста — в палитре мира, не системным синим */
+/* Выделение текста — в палитре мира (чернила на светлой, терракота на тёмной),
+   не системным синим */
 ::selection {
-  background: rgba(216, 69, 43, 0.38);
-  color: var(--text-bright);
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 ::-webkit-scrollbar {
@@ -65,7 +66,7 @@ p {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2e3431;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import type { NodeInfo, Track } from '../api';
 import { fmtTime, trackNum } from '../lib/format';
 import { useCurrentTrack } from '../store/player';
+import { useSettings } from '../store/settings';
 import s from './ui.module.css';
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -82,6 +83,23 @@ export const GearIcon = ({ size }: IconProps) => (
   />
 );
 export const QueueIcon = ({ size }: IconProps) => <Ico size={size} d={['M4 6h12', 'M4 12h12', 'M4 18h8', 'M19 10v8.2', 'm16.4 16.4 2.6 2.6 2.6-2.6']} />;
+export const SunIcon = ({ size }: IconProps) => (
+  <Ico
+    size={size}
+    d={[
+      'M12 8.2a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6Z',
+      'M12 2.6v2.2',
+      'M12 19.2v2.2',
+      'm4.6 4.6 1.6 1.6',
+      'm17.8 17.8 1.6 1.6',
+      'M2.6 12h2.2',
+      'M19.2 12h2.2',
+      'm6.2 17.8-1.6 1.6',
+      'm19.4 4.6-1.6 1.6',
+    ]}
+  />
+);
+export const MoonIcon = ({ size }: IconProps) => <Ico size={size} d={['M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z']} />;
 export const RepeatIcon = ({ size }: IconProps) => (
   <Ico size={size} d={['m17 2 4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'm7 22-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3']} />
 );
@@ -321,17 +339,32 @@ const mulberry32 = (a: number) => () => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-const TONES = ['#d8452b', '#c9803f', '#b3552f', '#d86a3a'];
-const GROUNDS = ['#191e1c', '#161b19', '#1b201e', '#171c1a'];
+/* Палитры обложек по теме. Светлая — печатные тона на бумажных подложках
+   (по концепту B): терракота, ржавчина, чернильный зелёный, охра, штрихи —
+   чернила. Тёмная — прежние яркие тона на графите с белыми штрихами. */
+const COVER_PALETTES = {
+  light: {
+    tones: ['#a8462c', '#b3552f', '#263c32', '#8a6a34'],
+    grounds: ['#e9e5d8', '#e3dfcd', '#edeadd', '#e0e5d9'],
+    ink: '#1c2f26',
+  },
+  dark: {
+    tones: ['#d8452b', '#c9803f', '#b3552f', '#d86a3a'],
+    grounds: ['#191e1c', '#161b19', '#1b201e', '#171c1a'],
+    ink: '#ffffff',
+  },
+};
 
 /**
  * Обложка без картинки с узла: спокойная геометрия, устойчивая к seed
  * (releaseId/trackId) — каждый релиз выглядит по-своему, без фейковых фото.
  */
 export function CoverArt({ seed, className, style }: { seed: string; className?: string; style?: CSSProperties }) {
+  const theme = useSettings((st) => st.theme);
+  const pal = COVER_PALETTES[theme];
   const rnd = mulberry32(hashSeed(seed));
-  const ground = GROUNDS[Math.floor(rnd() * GROUNDS.length)];
-  const tone = TONES[Math.floor(rnd() * TONES.length)];
+  const ground = pal.grounds[Math.floor(rnd() * pal.grounds.length)];
+  const tone = pal.tones[Math.floor(rnd() * pal.tones.length)];
   const variant = Math.floor(rnd() * 4);
   const off = 18 + rnd() * 30;
   // Якорь композиции: левый-низ или правый-верх — соседние релизы меньше похожи
@@ -354,7 +387,7 @@ export function CoverArt({ seed, className, style }: { seed: string; className?:
           {[0, 1, 2, 3, 4].map((i) => {
             const x = 12 + i * 17;
             const h = 30 + rnd() * 55;
-            return <rect key={i} x={x} y={100 - h} width={7} height={h} fill={i === Math.floor(rnd() * 5) ? tone : '#ffffff'} opacity={i % 2 ? 0.1 : 0.16} rx="1" />;
+            return <rect key={i} x={x} y={100 - h} width={7} height={h} fill={i === Math.floor(rnd() * 5) ? tone : pal.ink} opacity={i % 2 ? 0.1 : 0.16} rx="1" />;
           })}
           <circle cx={50 + (rnd() - 0.5) * 30} cy={30 + rnd() * 18} r={5} fill={tone} opacity="0.9" />
         </>
@@ -362,7 +395,7 @@ export function CoverArt({ seed, className, style }: { seed: string; className?:
       {variant === 2 && (
         <>
           {[16, 28, 40, 52].map((r, i) => (
-            <circle key={r} cx={ax} cy={ay} r={r} fill="none" stroke={i === 1 ? tone : '#ffffff'} strokeWidth={i === 1 ? 2 : 1.2} opacity={i === 1 ? 0.8 : 0.12} />
+            <circle key={r} cx={ax} cy={ay} r={r} fill="none" stroke={i === 1 ? tone : pal.ink} strokeWidth={i === 1 ? 2 : 1.2} opacity={i === 1 ? 0.8 : 0.12} />
           ))}
           <circle cx={ax + (flip ? -1 : 1) * (46 + rnd() * 12)} cy={ay + (flip ? 1 : -1) * (46 + rnd() * 8)} r={4.5} fill={tone} opacity="0.9" />
         </>
@@ -371,7 +404,7 @@ export function CoverArt({ seed, className, style }: { seed: string; className?:
         <>
           <polygon points={flip ? `100,0 0,${34 + rnd() * 20} 0,0` : `0,100 100,${34 + rnd() * 20} 100,100`} fill={tone} opacity="0.14" />
           <rect x={14 + rnd() * 58} y={16 + rnd() * 10} width="14" height="14" fill="none" stroke={tone} strokeWidth="1.6" opacity="0.9" />
-          <rect x="0" y={78 + rnd() * 6} width="100" height="1.4" fill="#ffffff" opacity="0.14" />
+          <rect x="0" y={78 + rnd() * 6} width="100" height="1.4" fill={pal.ink} opacity="0.14" />
         </>
       )}
     </svg>
@@ -380,10 +413,11 @@ export function CoverArt({ seed, className, style }: { seed: string; className?:
 
 /** Аватар артиста: первая буква имени на устойчивом тоне — без фейковых фото. */
 export function ArtistAvatar({ name, className }: { name: string; className?: string }) {
-  const tone = TONES[hashSeed(name) % TONES.length];
+  const theme = useSettings((st) => st.theme);
+  const tone = COVER_PALETTES[theme].tones[hashSeed(name) % COVER_PALETTES[theme].tones.length];
   const letter = [...name.trim()][0]?.toUpperCase() ?? '·';
   return (
-    <span className={cx(s.avatar, className)} style={{ background: `${tone}26`, borderColor: `${tone}59` }} aria-hidden="true">
+    <span className={cx(s.avatar, className)} style={{ background: `${tone}26`, borderColor: `${tone}59`, color: tone }} aria-hidden="true">
       {letter}
     </span>
   );
