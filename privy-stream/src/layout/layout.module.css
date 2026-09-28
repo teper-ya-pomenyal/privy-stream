@@ -762,9 +762,23 @@
     height: 64px;
   }
   .fullTransport {
-    flex-wrap: wrap;
-    justify-content: center;
+    /* Три колонки: play в центре экрана, назад/вперёд по краям,
+       кнопка «без звука» — отдельной строкой под ними */
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
     gap: 16px;
+  }
+  .fullTransport > :nth-child(1) {
+    justify-self: start;
+  }
+  .fullTransport > :nth-child(3) {
+    justify-self: end;
+  }
+  .fullTransport > :last-child {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
   }
   /* iOS не даёт менять громкость из JS — остаётся только «без звука» */
   .volBar {
