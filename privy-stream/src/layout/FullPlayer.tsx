@@ -4,7 +4,7 @@ import { wavePeaks } from '../lib/viz';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
 import { CoverArt, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
-import { pointerFraction, VolumeControl } from './PlayerBar';
+import { pointerFraction, RepeatControl, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
 
 const PEAKS = wavePeaks();
@@ -63,17 +63,20 @@ export function FullPlayer() {
             </div>
           </div>
 
+          {/* Ряд «назад · повтор · play · мьют · дальше»: повтор зеркален мьюту
+              по размеру и позиции, play между ними, «назад/дальше» — по краям. */}
           <div className={s.fullTransport}>
             <button type="button" className={s.iconBtn} onClick={prev} aria-label="Предыдущий">
               <PrevIcon size={18} />
             </button>
+            <RepeatControl className={s.repBtn} />
             <button type="button" className={s.fullPlay} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
               {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
             </button>
+            <VolumeControl />
             <button type="button" className={s.iconBtn} onClick={next} aria-label="Следующий">
               <NextIcon size={18} />
             </button>
-            <VolumeControl />
           </div>
         </div>
 

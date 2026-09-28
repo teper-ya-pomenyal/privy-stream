@@ -88,7 +88,7 @@ export function AudioEngine() {
     const from = usePlayer.getState().position;
     const id = setInterval(() => {
       const pos = from + (performance.now() - started) / 1000;
-      if (pos >= track.durationSec) usePlayer.getState().next();
+      if (pos >= track.durationSec) usePlayer.getState().trackEnded();
       else usePlayer.getState().tick(pos);
     }, 250);
     return () => clearInterval(id);
@@ -105,7 +105,15 @@ export function AudioEngine() {
         if (Number.isFinite(d) && d > 0) usePlayer.getState().setMedia({ mediaDuration: d });
       }}
       onTimeUpdate={(e) => usePlayer.getState().tick(e.currentTarget.currentTime)}
-      onEnded={() => usePlayer.getState().next()}
+      onEnded={() => {
+        const st = usePlayer.getState();
+        st.trackEnded();
+        // При повторе трека <audio> сам не отматывается — рестартуем вручную.
+        if (st.repeat === 'one' && audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(() => {});
+        }
+      }}
       onError={() => usePlayer.getState().setMedia({ playing: false, error: 'файл трека не воспроизводится: формат не поддерживается или файл повреждён' })}
     />
   );

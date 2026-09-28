@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Track } from '../api';
 
+/** Режим повтора: выключен / вся очередь по кругу / текущий трек. */
+export type RepeatMode = 'off' | 'all' | 'one';
+
 interface PlayerState {
   queue: Track[];
   index: number;
@@ -22,6 +25,8 @@ interface PlayerState {
   /** Положение регулятора громкости 0–1; громкость <audio> — его квадрат (см. AudioEngine). */
   volume: number;
   muted: boolean;
+  /** Режим повтора: off — доиграл и стоп, all — очередь по кругу, one — трек заново. */
+  repeat: RepeatMode;
 
   setQueue: (queue: Track[]) => void;
   /** Начать трек; если передан список — он становится очередью. */
@@ -29,6 +34,9 @@ interface PlayerState {
   toggle: () => void;
   next: () => void;
   prev: () => void;
+  /** Трек кончился сам (не клик по «дальше») — развилка по режиму повтора. */
+  trackEnded: () => void;
+  cycleRepeat: () => void;
   seek: (fraction: number) => void;
   tick: (position: number) => void;
   setMedia: (patch: Partial<Pick<PlayerState, 'mediaDuration' | 'loading' | 'error' | 'playing'>>) => void;
@@ -52,6 +60,7 @@ export const usePlayer = create<PlayerState>()(
       error: '',
       volume: 1,
       muted: false,
+      repeat: 'off',
 
       setQueue: (queue) => set({ queue, index: 0, position: 0 }),
 
@@ -83,6 +92,27 @@ export const usePlayer = create<PlayerState>()(
           playId: s.playId + 1,
         })),
 
+      /** Окончание трека само по себе (не клик по «дальше»): повтор трека — заново,
+          повтор очереди — по кругу, без повтора — стоп на последнем треке.
+          Ручные «дальше» и «назад» крутятся по кругу при любом режиме. */
+      trackEnded: () => {
+        const s = get();
+        if (!s.queue.length) return;
+        if (s.repeat === 'one') {
+          // Новый playId: рестарт считается новым проигрыванием (см. listenReporter).
+          set((st) => ({ position: 0, playing: true, seekNonce: st.seekNonce + 1, playId: st.playId + 1 }));
+          return;
+        }
+        if (s.repeat === 'off' && s.index === s.queue.length - 1) {
+          set({ position: 0, playing: false });
+          return;
+        }
+        get().next();
+      },
+
+      // Цикл: выключен → вся очередь → текущий трек → выключен.
+      cycleRepeat: () => set((s) => ({ repeat: s.repeat === 'off' ? 'all' : s.repeat === 'all' ? 'one' : 'off' })),
+
       seek(fraction) {
         const track = get().queue[get().index];
         if (!track) return;
@@ -103,7 +133,7 @@ export const usePlayer = create<PlayerState>()(
     }),
     {
       name: 'privy.player',
-      partialize: (s) => ({ queue: s.queue, index: s.index, position: s.position, volume: s.volume, muted: s.muted }),
+      partialize: (s) => ({ queue: s.queue, index: s.index, position: s.position, volume: s.volume, muted: s.muted, repeat: s.repeat }),
     },
   ),
 );

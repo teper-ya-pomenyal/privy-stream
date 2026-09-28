@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from
 import type { Track } from '../api';
 import { fmtTime } from '../lib/format';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
-import { CoverArt, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon } from '../ui';
+import { CoverArt, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, RepeatOneIcon } from '../ui';
 import s from './layout.module.css';
 
 /** Доля ширины элемента под курсором — для seek по полосе/волне. */
@@ -32,16 +32,22 @@ export function PlayerBar() {
       </button>
 
       <div className={s.center}>
+        {/* Боковые колонки грида равны — play остаётся ровно по центру, повтор слева от него */}
         <div className={s.transport}>
-          <button type="button" className={s.skip} onClick={prev} aria-label="Предыдущий">
-            <PrevIcon />
-          </button>
+          <div className={cx(s.transportSide, s.transportLeft)}>
+            <button type="button" className={s.skip} onClick={prev} aria-label="Предыдущий">
+              <PrevIcon />
+            </button>
+            <RepeatControl className={s.skip} />
+          </div>
           <button type="button" className={s.playBtn} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
             {playing ? <PauseIcon size={17} /> : <PlayIcon size={17} />}
           </button>
-          <button type="button" className={s.skip} onClick={next} aria-label="Следующий">
-            <NextIcon />
-          </button>
+          <div className={s.transportSide}>
+            <button type="button" className={s.skip} onClick={next} aria-label="Следующий">
+              <NextIcon />
+            </button>
+          </div>
         </div>
         <div className={s.progressRow}>
           <span className={s.time}>{fmtTime(position)}</span>
@@ -61,6 +67,23 @@ export function PlayerBar() {
         </button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Кнопка режима повтора: выключен → вся очередь → текущий трек.
+ * Вид берётся из переданного класса: в нижнем баре — как «назад/дальше»,
+ * в полном плеере — бокс размером с кнопку «без звука» (зеркало слева от play).
+ */
+export function RepeatControl({ className }: { className?: string }) {
+  // Точечный селектор: кнопка не должна перерисовываться на каждом тике позиции.
+  const repeat = usePlayer((p) => p.repeat);
+  const cycleRepeat = usePlayer((p) => p.cycleRepeat);
+  const label = repeat === 'off' ? 'Повтор выключен' : repeat === 'all' ? 'Повтор очереди' : 'Повтор трека';
+  return (
+    <button type="button" className={cx(className, repeat !== 'off' && s.repActive)} onClick={cycleRepeat} aria-label={label} title={label}>
+      {repeat === 'one' ? <RepeatOneIcon size={18} /> : <RepeatIcon size={18} />}
+    </button>
   );
 }
 

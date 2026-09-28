@@ -82,6 +82,13 @@ export const GearIcon = ({ size }: IconProps) => (
   />
 );
 export const QueueIcon = ({ size }: IconProps) => <Ico size={size} d={['M4 6h12', 'M4 12h12', 'M4 18h8', 'M19 10v8.2', 'm16.4 16.4 2.6 2.6 2.6-2.6']} />;
+export const RepeatIcon = ({ size }: IconProps) => (
+  <Ico size={size} d={['m17 2 4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'm7 22-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3']} />
+);
+/** Повтор одной композиции — та же стрелка с единицей в центре. */
+export const RepeatOneIcon = ({ size }: IconProps) => (
+  <Ico size={size} d={['m17 2 4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'm7 22-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3', 'M11.5 10h1v4']} />
+);
 
 /** Адрес узла для показа: без схемы (https://node.example → node.example). */
 export const hostLabel = (host: string) => host.replace(/^https?:\/\//, '');
