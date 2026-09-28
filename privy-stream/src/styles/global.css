@@ -76,6 +76,14 @@ p {
   background: transparent;
 }
 
+/* Кросс-фейд всей страницы при смене темы (см. setTheme в store/settings):
+   стандартная анимация слишком резкая, растягиваем и смягчаем */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+}
+
 @keyframes pv-blink {
   0%,
   45% {
