@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { useLibrary } from '../api/queries';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
+import { useFavorites } from '../store/favorites';
 import { useActiveNode } from '../store/servers';
 import { usePlayer } from '../store/player';
 import { useSession } from '../store/session';
@@ -14,7 +14,8 @@ import { MiniPlayer, PlayerBar } from './PlayerBar';
 import s from './layout.module.css';
 
 export function AppShell() {
-  const library = useLibrary();
+  const favIds = useFavorites((f) => f.ids);
+  const favSnapshots = useFavorites((f) => f.tracks);
   const queueEmpty = usePlayer((p) => p.queue.length === 0);
   const setQueue = usePlayer((p) => p.setQueue);
   const fullscreen = usePlayer((p) => p.fullscreen);
@@ -22,10 +23,12 @@ export function AppShell() {
 
   useEffect(() => startListenReporter(), []);
 
-  // Первый запуск приложения: очередь — локальная фонотека (в вебе её нет).
+  // Первый запуск приложения: очередь — фонотека (в вебе её нет).
   useEffect(() => {
-    if (!IS_WEB && queueEmpty && library.data?.length) setQueue(library.data);
-  }, [queueEmpty, library.data, setQueue]);
+    if (!IS_WEB && queueEmpty && favIds.length) {
+      setQueue(favIds.map((id) => favSnapshots[id]).filter((t) => t != null));
+    }
+  }, [queueEmpty, favIds, favSnapshots, setQueue]);
 
   return (
     <div className={s.app}>

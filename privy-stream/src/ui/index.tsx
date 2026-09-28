@@ -4,6 +4,7 @@ import type { NodeInfo, Track } from '../api';
 import { fmtTime, trackNum } from '../lib/format';
 import { useCurrentTrack } from '../store/player';
 import { useSettings } from '../store/settings';
+import type { FavControl } from '../store/favorites';
 import s from './ui.module.css';
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -100,6 +101,15 @@ export const SunIcon = ({ size }: IconProps) => (
   />
 );
 export const MoonIcon = ({ size }: IconProps) => <Ico size={size} d={['M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z']} />;
+/** Сердечко избранного: контур, а в избранном — залитое акцентом. */
+export const HeartIcon = ({ size, filled = false }: IconProps & { filled?: boolean }) =>
+  filled ? (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ) : (
+    <Ico size={size} d={['M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z']} />
+  );
 export const RepeatIcon = ({ size }: IconProps) => (
   <Ico size={size} d={['m17 2 4 4-4 4', 'M3 11v-1a4 4 0 0 1 4-4h14', 'm7 22-4-4 4-4', 'M21 13v1a4 4 0 0 1-4 4H3']} />
 );
@@ -490,14 +500,25 @@ export function TrackTable({
   variant,
   onPlay,
   header = true,
+  fav,
 }: {
   tracks: Track[];
   variant: 'release' | 'popular' | 'library';
   onPlay: (t: Track) => void;
   header?: boolean;
+  /** Избранное: сердечко в строке (веб — неактивное с пометкой «скоро»). */
+  fav?: FavControl;
 }) {
   const current = useCurrentTrack();
-  const cols = variant === 'library' ? s.colsLibrary : variant === 'popular' ? s.colsPopular : s.colsRelease;
+  const cols = fav
+    ? variant === 'library'
+      ? s.colsLibraryFav
+      : s.colsReleaseFav
+    : variant === 'library'
+      ? s.colsLibrary
+      : variant === 'popular'
+        ? s.colsPopular
+        : s.colsRelease;
   return (
     <div>
       {header && (
@@ -511,6 +532,7 @@ export function TrackTable({
             </>
           )}
           {variant !== 'popular' && <span>ФОРМАТ</span>}
+          {fav && <span />}
           <span className={s.right}>ВРЕМЯ</span>
         </div>
       )}
@@ -561,6 +583,30 @@ export function TrackTable({
               </>
             )}
             {variant !== 'popular' && <span className={s.tFmt}>{t.format ?? (t.explicit ? '18+' : '—')}</span>}
+            {fav && (
+              /* Сердечко внутри строки-кнопки: гасим всплытие, чтобы клик не играл трек */
+              <span
+                role="button"
+                tabIndex={0}
+                aria-pressed={fav.isFav(t)}
+                aria-label={fav.soon ? 'Избранное — скоро' : fav.isFav(t) ? 'Убрать из фонотеки' : 'Добавить в фонотеку'}
+                title={fav.soon ? 'Избранное — скоро' : fav.isFav(t) ? 'Убрать из фонотеки' : 'В фонотеку'}
+                className={cx(s.tFav, fav.isFav(t) && s.tFavOn, fav.soon && s.tFavSoon)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!fav.soon) fav.toggle(t);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!fav.soon) fav.toggle(t);
+                }}
+              >
+                <HeartIcon size={14} filled={fav.isFav(t)} />
+                {fav.soon && <span className={s.tFavSoonTag}>скоро</span>}
+              </span>
+            )}
             <span className={s.tDur}>{fmtTime(t.durationSec)}</span>
           </button>
         );

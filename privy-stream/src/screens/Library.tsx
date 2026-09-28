@@ -1,13 +1,20 @@
-import { useLibrary } from '../api/queries';
+import { useNavigate } from 'react-router';
 import { plural } from '../lib/format';
+import { useFavControl, useFavorites, useFavoritesHydrated } from '../store/favorites';
 import { usePlayer } from '../store/player';
-import { Screen, ScreenHeader, TrackTable, TrackTableSkeleton } from '../ui';
+import { Button, EmptyState, Screen, ScreenHeader, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
 export function Library() {
-  const library = useLibrary();
+  const navigate = useNavigate();
+  const hydrated = useFavoritesHydrated();
+  const ids = useFavorites((f) => f.ids);
+  const snapshots = useFavorites((f) => f.tracks);
+  const fav = useFavControl();
   const play = usePlayer((p) => p.play);
-  const tracks = library.data ?? [];
+
+  // Порядок из списка UUID; снимки под капотом дают название/артиста/время.
+  const tracks = ids.map((id) => snapshots[id]).filter((t) => t != null);
 
   return (
     <Screen>
@@ -15,8 +22,8 @@ export function Library() {
         title="Фонотека"
         sub={
           <>
-            Локальное хранилище устройства · не индексируется узлом
-            {library.data && (
+            Избранные треки · хранятся на устройстве
+            {tracks.length > 0 && (
               <>
                 {' · '}
                 {tracks.length} {plural(tracks.length, ['трек', 'трека', 'треков'])}
@@ -26,10 +33,20 @@ export function Library() {
         }
       />
       <div className={s.tracksList}>
-        {library.data ? (
-          <TrackTable variant="library" tracks={tracks} onPlay={(t) => play(t, tracks)} />
-        ) : (
+        {!hydrated ? (
           <TrackTableSkeleton rows={9} />
+        ) : tracks.length ? (
+          <TrackTable variant="library" tracks={tracks} onPlay={(t) => play(t, tracks)} fav={fav} />
+        ) : (
+          <EmptyState
+            label="ФОНОТЕКА ПУСТА"
+            text="Отмечай треки сердечком в треклистах релизов — они соберутся здесь. Список хранится на устройстве и не уходит на узел."
+            action={
+              <Button size="sm" onClick={() => navigate('/catalog')}>
+                К поиску по узлу
+              </Button>
+            }
+          />
         )}
       </div>
     </Screen>

@@ -56,4 +56,3 @@ export const MOCK_TRACKS: Track[] = [
   T('t11', 'Граница сна', 'AR-071', 242, 'FLAC'),
 ];
 
-export const MOCK_LIBRARY_IDS = ['t01', 't02', 't03', 't04', 't05', 't06', 't07', 't08', 't09'];

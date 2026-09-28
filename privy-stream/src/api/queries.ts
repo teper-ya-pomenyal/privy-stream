@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { browseApi, localLibrary, nodeApi } from './index';
+import { browseApi, nodeApi } from './index';
 
 // Ключи всегда начинаются с host, чтобы данные разных узлов не смешивались.
 export const keys = {
@@ -7,7 +7,6 @@ export const keys = {
   search: (host: string, query: string) => ['node', host, 'search', query] as const,
   release: (host: string, id: string) => ['node', host, 'release', id] as const,
   artist: (host: string, id: string) => ['node', host, 'artist', id] as const,
-  library: ['local', 'library'] as const,
 };
 
 /** Полка узла; data === undefined и enabled === false, если узел её не отдаёт. */
@@ -34,6 +33,3 @@ export const useRelease = (host: string, id: string) =>
 
 export const useArtist = (host: string, id: string) =>
   useQuery({ queryKey: keys.artist(host, id), queryFn: () => nodeApi.artist(host, id) });
-
-export const useLibrary = () =>
-  useQuery({ queryKey: keys.library, queryFn: () => localLibrary.tracks(), staleTime: Infinity });

@@ -134,8 +134,3 @@ export interface NodeApi {
    */
   markListened(host: string, trackId: string): Promise<void>;
 }
-
-/** Локальная фонотека. Не зависит от узла. */
-export interface LocalLibrary {
-  tracks(): Promise<Track[]>;
-}

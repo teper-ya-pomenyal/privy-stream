@@ -385,11 +385,18 @@
 .colsRelease {
   grid-template-columns: 34px minmax(0, 1fr) auto 52px;
 }
+/* Варианты с колонкой избранного (сердечко перед временем) */
+.colsReleaseFav {
+  grid-template-columns: 34px minmax(0, 1fr) auto 28px 52px;
+}
 .colsPopular {
   grid-template-columns: 34px minmax(0, 1fr) 52px;
 }
 .colsLibrary {
   grid-template-columns: 34px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto 52px;
+}
+.colsLibraryFav {
+  grid-template-columns: 34px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto 28px 52px;
 }
 .tLead {
   position: relative;
@@ -471,6 +478,55 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* Сердечко избранного в строке трека */
+.tFav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-xs);
+  color: var(--text-5);
+  transition: color 0.14s;
+  cursor: pointer;
+}
+.tFav:hover {
+  color: var(--accent-text);
+}
+.tFavOn {
+  color: var(--accent);
+}
+.tFavOn:hover {
+  color: var(--accent-hover);
+}
+/* Веб: функция ещё не работает — видно, но не нажимается */
+.tFavSoon,
+.tFavSoon:hover {
+  color: var(--line-hover);
+  cursor: default;
+}
+.tFavSoonTag {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  translate: 0 -50%;
+  padding: 3px 6px;
+  border: 1px solid var(--line-input);
+  border-radius: 4px;
+  background: var(--bg-panel);
+  color: var(--text-3);
+  font: 600 9px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.14s;
+  pointer-events: none;
+  z-index: 2;
+}
+.tFavSoon:hover .tFavSoonTag {
+  opacity: 1;
+}
 .right {
   text-align: right;
 }
@@ -527,6 +583,10 @@
   .colsRelease,
   .colsPopular {
     grid-template-columns: 30px minmax(0, 1fr) auto 44px;
+  }
+  .colsLibraryFav,
+  .colsReleaseFav {
+    grid-template-columns: 30px minmax(0, 1fr) auto 24px 40px;
   }
   .libOnly {
     display: none;

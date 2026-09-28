@@ -1,5 +1,5 @@
-import { MOCK_ARTISTS, MOCK_LIBRARY_IDS, MOCK_NODES, MOCK_RELEASES, MOCK_TRACKS } from './mock-data';
-import { NodeError, type LocalLibrary, type NodeApi, type Track } from './types';
+import { MOCK_ARTISTS, MOCK_NODES, MOCK_RELEASES, MOCK_TRACKS } from './mock-data';
+import { NodeError, type NodeApi, type Track } from './types';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -87,8 +87,3 @@ export const mockNodeApi: NodeApi = {
   async markListened() {},
 };
 
-export const mockLibrary: LocalLibrary = {
-  async tracks() {
-    return MOCK_TRACKS.filter((t) => MOCK_LIBRARY_IDS.includes(t.id));
-  },
-};

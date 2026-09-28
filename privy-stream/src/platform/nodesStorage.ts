@@ -3,23 +3,22 @@ import type { Store } from '@tauri-apps/plugin-store';
 import { createJSONStorage, type PersistStorage, type StorageValue } from 'zustand/middleware';
 import { IS_WEB } from './mode';
 
-// Где живёт список узлов:
-// - приложение (Tauri): nodes.json в app data dir
-//   (macOS: ~/Library/Application Support/stream.privy.client/nodes.json).
+// Где живёт JSON-хранилище (список узлов, избранное):
+// - приложение (Tauri): <файл>.json в app data dir
+//   (macOS: ~/Library/Application Support/stream.privy.client/<файл>.json).
 //   Общий для dev- и релизной сборки, в отличие от localStorage webview;
-// - веб: нигде — единственный узел каждый раз берётся из config.json;
+// - веб: нигде — данные узла каждый раз берутся из config.json;
 // - браузер в режиме app (разработка): localStorage.
 
-const FILE = 'nodes.json';
+const fileStores = new Map<string, Promise<Store>>();
+const fileStore = (file: string) =>
+  fileStores.get(file) ??
+  fileStores.set(file, import('@tauri-apps/plugin-store').then(({ load }) => load(file, { autoSave: false, defaults: {} }))).get(file)!;
 
-let store: Promise<Store> | null = null;
-const fileStore = () =>
-  (store ??= import('@tauri-apps/plugin-store').then(({ load }) => load(FILE, { autoSave: false, defaults: {} })));
-
-function fileStorage<S>(): PersistStorage<S> {
+function fileStorage<S>(file: string): PersistStorage<S> {
   return {
     async getItem(name) {
-      const s = await fileStore();
+      const s = await fileStore(file);
       const value = await s.get<StorageValue<S>>(name);
       if (value != null) return value;
       // Версии до файлового хранилища держали список в localStorage webview — переносим один раз.
@@ -32,12 +31,12 @@ function fileStorage<S>(): PersistStorage<S> {
       return parsed;
     },
     async setItem(name, value) {
-      const s = await fileStore();
+      const s = await fileStore(file);
       await s.set(name, value);
       await s.save();
     },
     async removeItem(name) {
-      const s = await fileStore();
+      const s = await fileStore(file);
       await s.delete(name);
       await s.save();
     },
@@ -50,8 +49,13 @@ const noStorage: PersistStorage<unknown> = {
   removeItem: () => {},
 };
 
-export function nodesStorage<S>(): PersistStorage<S> | undefined {
+/** PersistStorage поверх JSON-файла (десктоп) или localStorage (браузерная разработка). */
+export function jsonFileStorage<S>(file: string): PersistStorage<S> | undefined {
   if (IS_WEB) return noStorage as PersistStorage<S>;
-  if (isTauri()) return fileStorage<S>();
+  if (isTauri()) return fileStorage<S>(file);
   return createJSONStorage<S>(() => localStorage);
+}
+
+export function nodesStorage<S>(): PersistStorage<S> | undefined {
+  return jsonFileStorage<S>('nodes.json');
 }

@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router';
 import { errorText } from '../api';
 import { useRelease } from '../api/queries';
 import { fmtTime, plural } from '../lib/format';
+import { useFavControl } from '../store/favorites';
 import { usePlayer } from '../store/player';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
@@ -14,6 +15,7 @@ export function Album() {
   const navigate = useNavigate();
   const release = useRelease(node.host, id);
   const play = usePlayer((p) => p.play);
+  const fav = useFavControl();
   const r = release.data;
 
   const totalSec = r?.tracks.reduce((sum, t) => sum + t.durationSec, 0) ?? 0;
@@ -100,7 +102,7 @@ export function Album() {
             <div className={s.tracks}>
               {r ? (
                 r.tracks.length ? (
-                  <TrackTable variant="release" tracks={r.tracks} onPlay={(t) => play(t, r.tracks)} />
+                  <TrackTable variant="release" tracks={r.tracks} onPlay={(t) => play(t, r.tracks)} fav={fav} />
                 ) : (
                   <EmptyState label="ПУСТОЙ ТРЕКЛИСТ" text="Узел отдал релиз без треков." />
                 )

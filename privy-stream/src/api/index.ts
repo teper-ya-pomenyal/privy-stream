@@ -1,6 +1,6 @@
 import { httpNodeApi } from './http';
-import { isMockHost, mockLibrary, mockNodeApi } from './mock';
-import type { LocalLibrary, NodeApi } from './types';
+import { isMockHost, mockNodeApi } from './mock';
+import type { NodeApi } from './types';
 
 /**
  * Узлы с адресами из макета обслуживает мок (для демо без бэкенда),
@@ -22,8 +22,6 @@ const pick = (host: string): NodeApi => (isMockHost(host) ? mockNodeApi : httpNo
 
 /** Полка узла без поиска — есть только у мока, в API v1 такого эндпоинта нет. */
 export const browseApi = (host: string) => pick(host).browse;
-
-export const localLibrary: LocalLibrary = mockLibrary;
 
 export { setAuthExpiredHandler } from './http';
 export * from './types';
