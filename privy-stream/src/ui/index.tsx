@@ -583,7 +583,8 @@ export function TrackTable({
       {tracks.map((t, i) => {
         const playing = current?.id === t.id;
         return (
-          <button key={t.id} type="button" className={cx(s.trackRow, cols, playing && s.playing)} onClick={() => onPlay(t)}>
+          /* Клик по строке — удобство мыши; путь клавиатуры и диктора — кнопка названия ниже */
+          <div key={t.id} className={cx(s.trackRow, cols, playing && s.playing)} onClick={() => onPlay(t)}>
             {/* Подсветка играющего трека переезжает к новой строке (Motion layoutId):
                 видно, что именно заиграло после клика или переключения. */}
             {playing && (
@@ -605,21 +606,31 @@ export function TrackTable({
                 </span>
               )}
             </span>
-            {variant === 'release' ? (
-              <span className={s.tTitleCell}>
+            <button
+              type="button"
+              className={cx(s.tTitleBtn, variant !== 'popular' && s.tTitleCell)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPlay(t);
+              }}
+              aria-label={`Играть «${t.title}»`}
+            >
+              {variant === 'release' ? (
+                <>
+                  <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
+                  {/* Формат уже есть в своей колонке — под названием только артист. */}
+                  <span className={s.tSub}>{t.artist}</span>
+                </>
+              ) : variant === 'library' ? (
+                <>
+                  <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
+                  {/* На телефоне колонки артиста и релиза скрыты — показываем их строкой под названием */}
+                  <span className={cx(s.tSub, s.mobileOnly, 'ellipsis')}>{[t.artist, t.release].filter(Boolean).join(' · ')}</span>
+                </>
+              ) : (
                 <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
-                {/* Формат уже есть в своей колонке — под названием только артист. */}
-                <span className={s.tSub}>{t.artist}</span>
-              </span>
-            ) : variant === 'library' ? (
-              <span className={s.tTitleCell}>
-                <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
-                {/* На телефоне колонки артиста и релиза скрыты — показываем их строкой под названием */}
-                <span className={cx(s.tSub, s.mobileOnly, 'ellipsis')}>{[t.artist, t.release].filter(Boolean).join(' · ')}</span>
-              </span>
-            ) : (
-              <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
-            )}
+              )}
+            </button>
             {variant === 'library' && (
               <>
                 <span className={cx(s.tArtist, s.libOnly, 'ellipsis')}>{t.artist}</span>
@@ -628,10 +639,11 @@ export function TrackTable({
             )}
             {variant !== 'popular' && <span className={s.tFmt}>{t.format ?? (t.explicit ? '18+' : '—')}</span>}
             {fav && (
-              /* Сердечко внутри строки-кнопки: гасим всплытие, чтобы клик не играл трек */
-              <span
-                role="button"
-                tabIndex={fav.soon ? -1 : 0}
+              /* Сердечко — соседняя с названием нативная кнопка: гасим всплытие,
+                  чтобы клик не играл трек; активация с клавиатуры — сама кнопка */
+              <button
+                type="button"
+                tabIndex={fav.soon ? -1 : undefined}
                 aria-disabled={fav.soon || undefined}
                 aria-pressed={fav.soon ? undefined : fav.isFav(t)}
                 aria-label={fav.soon ? 'Избранное — скоро' : fav.isFav(t) ? 'Убрать из фонотеки' : 'Добавить в фонотеку'}
@@ -641,19 +653,13 @@ export function TrackTable({
                   e.stopPropagation();
                   if (!fav.soon) fav.toggle(t);
                 }}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter' && e.key !== ' ') return;
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!fav.soon) fav.toggle(t);
-                }}
               >
                 <HeartIcon size={14} filled={fav.isFav(t)} />
                 {fav.soon && <span className={s.tFavSoonTag}>скоро</span>}
-              </span>
+              </button>
             )}
             <span className={s.tDur}>{fmtTime(t.durationSec)}</span>
-          </button>
+          </div>
         );
       })}
     </div>
