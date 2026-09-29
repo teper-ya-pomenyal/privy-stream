@@ -98,6 +98,7 @@
   border-bottom: 1px solid var(--line-ctrl);
 }
 .tab {
+  position: relative;
   flex: 1;
   padding: 16px 0;
   text-align: center;
@@ -113,7 +114,22 @@
 .tabActive,
 .tabActive:hover {
   color: var(--text-bright);
+}
+/* Подложка активной вкладки — общий элемент Motion (layoutId), скользит при смене. */
+.tabPill {
+  position: absolute;
+  inset: 0;
   background: var(--bg-active);
+}
+.tabLabel {
+  position: relative;
+}
+/* Раскрывающийся блок полей регистрации; внутренний gap повторяет .cardBody. */
+.regExtra {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow: hidden;
 }
 .cardBody {
   padding: 26px 26px 24px;

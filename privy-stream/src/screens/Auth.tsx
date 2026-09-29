@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { errorText, nodeApi } from '../api';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
@@ -164,7 +165,11 @@ export function Auth() {
                   setErr('');
                 }}
               >
-                {m === 'login' ? 'Вход' : 'Регистрация'}
+                {/* Подложка активной вкладки скользит между «Вход» и «Регистрация» */}
+                {mode === m && (
+                  <motion.span aria-hidden="true" className={s.tabPill} layoutId="auth-tab" transition={{ type: 'spring', stiffness: 480, damping: 42 }} />
+                )}
+                <span className={s.tabLabel}>{m === 'login' ? 'Вход' : 'Регистрация'}</span>
               </button>
             ))}
           </div>
@@ -210,17 +215,31 @@ export function Auth() {
                 <Requirements id="password-rules" title="ТРЕБОВАНИЯ К ПАРОЛЮ" rules={PASSWORD_RULES} value={pass} />
               )}
             </div>
-            {reg && <PasswordField label="ПОВТОР ПАРОЛЯ" value={pass2} onChange={edit(setPass2)} placeholder="••••••••••" />}
-            {reg && (
-              <DateField
-                label="ДАТА РОЖДЕНИЯ"
-                value={birth}
-                onChange={(v) => {
-                  setBirth(v);
-                  setErr('');
-                }}
-              />
-            )}
+            {/* Поля регистрации раскрывают карточку плавно, а не прыжком.
+                marginBottom: -18 гасит лишний flex-gap .cardBody (18px),
+                пока блок схлопнут, — иначе под паролем остаётся дыра. */}
+            <AnimatePresence initial={false}>
+              {reg && (
+                <motion.div
+                  key="reg-extra"
+                  className={s.regExtra}
+                  initial={{ height: 0, opacity: 0, marginBottom: -18 }}
+                  animate={{ height: 'auto', opacity: 1, marginBottom: 0 }}
+                  exit={{ height: 0, opacity: 0, marginBottom: -18 }}
+                  transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+                >
+                  <PasswordField label="ПОВТОР ПАРОЛЯ" value={pass2} onChange={edit(setPass2)} placeholder="••••••••••" />
+                  <DateField
+                    label="ДАТА РОЖДЕНИЯ"
+                    value={birth}
+                    onChange={(v) => {
+                      setBirth(v);
+                      setErr('');
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <ErrorNote>{shownError}</ErrorNote>
 
