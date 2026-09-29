@@ -68,6 +68,8 @@ export function Auth() {
   const [addOpen, setAddOpen] = useState(noNodes);
 
   const reg = mode === 'register';
+  // Выбранный узел не отвечает: вход невозможен, кнопка отключена до «Проверить снова».
+  const nodeOffline = !!node && node.status !== 'online';
   // Ошибка стора узлов здесь актуальна, только пока выбранный узел не отвечает;
   // ошибки добавления узла показываются в самой форме добавления.
   const shownError = err || (!addOpen && node && node.status !== 'online' ? nodeError : '');
@@ -243,8 +245,15 @@ export function Auth() {
 
             <ErrorNote>{shownError}</ErrorNote>
 
-            <Button type="submit" variant="accent" size="lg" disabled={busy} style={{ marginTop: 4 }}>
-              {busy ? '···' : reg ? 'Создать ключ' : 'Войти'}
+            <Button
+              type="submit"
+              variant="accent"
+              size="lg"
+              disabled={busy || nodeOffline}
+              aria-describedby={nodeOffline ? 'node-offline-note' : undefined}
+              style={{ marginTop: 4 }}
+            >
+              {busy ? '···' : nodeOffline ? 'Узел не отвечает' : reg ? 'Создать ключ' : 'Войти'}
             </Button>
             <div className={s.cardFoot}>
               <span>POST /v1/auth</span>
@@ -299,9 +308,11 @@ function WebNode({ name, host, online }: { name: string; host: string; online: b
  * без узла регистрироваться негде.
  */
 function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
-  const { nodes, activeId, pick, add, adding, error, clearError } = useServers();
+  const { nodes, activeId, pick, add, adding, error, clearError, checkActive } = useServers();
   const node = useActiveNodeOrNull();
   const [host, setHost] = useState('');
+  // Узел, который сохранили, но handshake не прошёл: адрес остаётся в поле, кнопка становится «Повторить».
+  const [savedOfflineId, setSavedOfflineId] = useState<string | null>(null);
   const empty = nodes.length === 0;
 
   function close() {
@@ -312,12 +323,29 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
 
   async function submitAdd() {
     if (adding) return;
-    const added = await add(host);
-    if (!added) return; // ошибка ввода — остаётся в форме
-    setHost('');
-    setOpen(false);
-    // pick() выставит 503, если узел не ответил на handshake.
-    pick(added.id);
+    const result = await add(host);
+    if (!result) return; // ошибка ввода — остаётся в форме
+    if (result.online) {
+      setSavedOfflineId(null);
+      setHost('');
+      setOpen(false);
+    } else {
+      setSavedOfflineId(result.id);
+    }
+    pick(result.id);
+  }
+
+  async function retrySaved() {
+    if (!savedOfflineId) return;
+    // Узел уже активен (submitAdd вызвал pick), а connect() стор к активному
+    // узлу не переподключается: handshake заново — это checkActive, не add().
+    await checkActive();
+    const online = useServers.getState().nodes.find((n) => n.id === savedOfflineId)?.status === 'online';
+    if (online) {
+      setSavedOfflineId(null);
+      setHost('');
+      setOpen(false);
+    }
   }
 
   return (
@@ -342,6 +370,8 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
               >
                 <StatusDot color={st.dot} />
                 <span className="ellipsis">{n.name}</span>
+                {/* Имя может совпадать у нескольких узлов — различаем их адресом. */}
+                {hostLabel(n.host) !== n.name && <span className={s.chipHost}>{hostLabel(n.host)}</span>}
               </button>
             );
           })}
@@ -360,6 +390,16 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
         </div>
       )}
 
+      {/* Выбранный узел не отвечает: говорим прямо и даём перепроверить, не скрывая форму. */}
+      {node && node.status !== 'online' && !open && (
+        <div id="node-offline-note" className={s.nodeOffline}>
+          <span>узел не отвечает — вход сейчас невозможен</span>
+          <Button variant="quiet" size="sm" onClick={() => void checkActive()}>
+            Проверить снова
+          </Button>
+        </div>
+      )}
+
       {open && (
         <div className={s.addNode}>
           <div className={s.addNodeRow}>
@@ -371,6 +411,8 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
               placeholder="10.0.0.5:8443"
               onChange={(e) => {
                 setHost(e.target.value);
+                // Адрес меняют — «Повторить» про старый узел не имеет смысла.
+                setSavedOfflineId(null);
                 clearError();
               }}
               onKeyDown={(e) => {
@@ -382,8 +424,14 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
                 if (e.key === 'Escape' && !empty) close();
               }}
             />
-            <Button variant="accent" size="sm" className={s.addNodeBtn} disabled={adding} onClick={() => void submitAdd()}>
-              {adding ? 'Проверка…' : 'Добавить'}
+            <Button
+              variant="accent"
+              size="sm"
+              className={s.addNodeBtn}
+              disabled={adding}
+              onClick={savedOfflineId ? () => void retrySaved() : () => void submitAdd()}
+            >
+              {savedOfflineId ? 'Повторить' : adding ? 'Проверка…' : 'Добавить'}
             </Button>
             {!empty && (
               <Button variant="quiet" size="sm" className={s.addNodeBtn} onClick={close} aria-label="Отмена">
@@ -396,11 +444,13 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
       )}
 
       <div className={s.hint}>
-        {open
-          ? 'адрес вида host:port · ключ и история остаются на стороне клиента'
-          : node
-            ? `${node.host} · аккаунт создаётся на выбранном узле`
-            : 'добавь узел, чтобы войти или зарегистрироваться'}
+        {savedOfflineId
+          ? 'адрес сохранён · узел не отвечает — «Повторить» проверит ещё раз, адрес можно поправить выше'
+          : open
+            ? 'адрес вида host:port · ключ и история остаются на стороне клиента'
+            : node
+              ? `${node.host} · аккаунт создаётся на выбранном узле`
+              : 'добавь узел, чтобы войти или зарегистрироваться'}
       </div>
     </div>
   );
