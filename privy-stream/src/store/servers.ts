@@ -16,8 +16,12 @@ interface ServersState {
   connectingId: string | null;
   adding: boolean;
   error: string;
-  /** Выбор узла на экране входа — без handshake. */
-  pick: (id: string) => void;
+  /**
+   * Выбор узла на экране входа — без handshake.
+   * keepError: не трогать store.error (ни записывать, ни сбрасывать) —
+   * форма добавления уже показала причину, generic-ошибкой затирать её нельзя.
+   */
+  pick: (id: string, opts?: { keepError?: boolean }) => void;
   /** Handshake с узлом; true — узел стал активным. */
   connect: (id: string) => Promise<boolean>;
   /** Пробить узел и добавить в список. online: false — адрес сохранён, но узел не ответил. */
@@ -41,9 +45,12 @@ export const useServers = create<ServersState>()(
       adding: false,
       error: '',
 
-      pick(id) {
+      pick(id, opts) {
         const node = get().nodes.find((n) => n.id === id);
         if (!node) return;
+        // Форма добавления уже показала причину (offline-ветка add()) —
+        // не затирать её generic-ошибкой «503 · host не отвечает» и не сбрасывать.
+        if (opts?.keepError) return set({ activeId: id });
         set({ activeId: id, error: node.status === 'online' ? '' : `503 · ${node.host} не отвечает` });
       },
 

@@ -332,7 +332,9 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
     } else {
       setSavedOfflineId(result.id);
     }
-    pick(result.id);
+    // Offline-ветка: причину уже записал add() в error стора («… · адрес сохранён») —
+    // keepError запрещает pick затирать её generic-«503 · host не отвечает».
+    pick(result.id, result.online ? undefined : { keepError: true });
   }
 
   async function retrySaved() {
@@ -446,7 +448,9 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
 
       <div className={s.hint}>
         {savedOfflineId
-          ? 'адрес сохранён · узел не отвечает — «Повторить» проверит ещё раз, адрес можно поправить выше'
+          // Причину показывает ErrorNote выше («… · адрес сохранён») —
+          // здесь остаётся только подсказка про «Повторить», без дублирования текста.
+          ? '«Повторить» проверит ещё раз · адрес можно поправить выше'
           : open
             ? 'адрес вида host:port · ключ и история остаются на стороне клиента'
             : node
