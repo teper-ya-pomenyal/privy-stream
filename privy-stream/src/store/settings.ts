@@ -15,7 +15,7 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       dense: false,
-      theme: 'light',
+      theme: 'dark',
       setDense: (dense) => set({ dense }),
       setTheme: (theme) => {
         // Плавная смена: View Transitions делает кросс-фейд всей страницы

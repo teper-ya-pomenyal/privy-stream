@@ -12,7 +12,7 @@ export function Settings() {
         <div className={s.settingRow}>
           <div className={s.settingText}>
             <span className={s.settingName}>Тема</span>
-            <span className={s.settingSub}>светлая «фонотека» или тёмный графит</span>
+            <span className={s.settingSub}>тёмный графит или светлая «фонотека»</span>
           </div>
           <div className={s.segmented} role="radiogroup">
             {(
