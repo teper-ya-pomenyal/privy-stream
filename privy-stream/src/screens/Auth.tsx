@@ -138,8 +138,8 @@ export function Auth() {
           </p>
           <div className={s.pitchFacts}>
             {[
-              ['ВХОД', 'JWT · RS256'],
-              ['СЕССИЯ', 'РОТАЦИЯ ТОКЕНОВ'],
+              ['ВХОД', 'пароль не сохраняется'],
+              ['СЕССИЯ', 'продлевается без пароля'],
               ['ТЕЛЕМЕТРИЯ', 'ВЫКЛ'],
             ].map(([k, v]) => (
               <div key={k} className={s.fact}>
@@ -253,11 +253,11 @@ export function Auth() {
               aria-describedby={nodeOffline ? 'node-offline-note' : undefined}
               style={{ marginTop: 4 }}
             >
-              {busy ? '···' : nodeOffline ? 'Узел не отвечает' : reg ? 'Создать ключ' : 'Войти'}
+              {busy ? '···' : nodeOffline ? 'Узел не отвечает' : reg ? 'Создать аккаунт' : 'Войти'}
             </Button>
             <div className={s.cardFoot}>
-              <span>POST /v1/auth</span>
-              <span>{reg ? 'RS256 · ключи на устройстве' : 'refresh · ротация'}</span>
+              <span>вход без телеметрии</span>
+              <span>{reg ? 'ключ хранится на устройстве' : 'сессия продлевается сама'}</span>
             </div>
           </form>
         </div>
@@ -337,8 +337,9 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
 
   async function retrySaved() {
     if (!savedOfflineId) return;
-    // Узел уже активен (submitAdd вызвал pick), а connect() стор к активному
-    // узлу не переподключается: handshake заново — это checkActive, не add().
+    // Узел уже активен (submitAdd вызвал pick); connect() стор пропускает только
+    // когда активный узел уже онлайн, — для неотвечающего handshake заново
+    // делает checkActive, а не add().
     await checkActive();
     const online = useServers.getState().nodes.find((n) => n.id === savedOfflineId)?.status === 'online';
     if (online) {

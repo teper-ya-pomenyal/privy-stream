@@ -7,7 +7,7 @@ export function Settings() {
 
   return (
     <Screen>
-      <ScreenHeader title="Настройки" sub="Клиент хранит всё на устройстве" />
+      <ScreenHeader title="Настройки" sub="Фонотека, ключи и настройки — на этом устройстве" />
       <div className={s.settingsList}>
         <div className={s.settingRow}>
           <div className={s.settingText}>
@@ -57,14 +57,21 @@ export function Settings() {
             ))}
           </div>
         </div>
+        {/* Приватность без переключателей: раздел честно показывает, что остаётся
+            на устройстве, а что уходит на узел при работе. */}
         <div className={s.settingRow}>
           <div className={s.settingText}>
-            <span className={s.settingName}>История прослушиваний</span>
-            <span className={s.settingSub}>
-              клиент историю не пишет и телеметрию не отправляет; при воспроизведении узел увеличивает только счётчик трека
-            </span>
+            <span className={s.settingName}>Что хранится на устройстве</span>
+            <span className={s.settingSub}>ключ входа, фонотека, список узлов, настройки</span>
           </div>
-          <span className={s.settingState}>ВЫКЛ</span>
+          <span className={s.settingState}>ЛОКАЛЬНО</span>
+        </div>
+        <div className={s.settingRow}>
+          <div className={s.settingText}>
+            <span className={s.settingName}>Что получает узел</span>
+            <span className={s.settingSub}>логин и пароль при входе, поисковые запросы, отметка о прослушанном треке (счётчик)</span>
+          </div>
+          <span className={s.settingState}>НА УЗЕЛ</span>
         </div>
       </div>
     </Screen>

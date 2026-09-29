@@ -71,3 +71,9 @@ it('keeps the address and offers a retry when the added node does not answer', a
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Повторить' })).not.toBeInTheDocument());
   expect(useServers.getState().nodes[0]).toMatchObject({ status: 'online' });
 });
+
+it('labels the registration submit in plain language', async () => {
+  render(<Auth />);
+  await userEvent.click(screen.getByRole('tab', { name: 'Регистрация' }));
+  expect(screen.getByRole('button', { name: 'Создать аккаунт' })).toBeInTheDocument();
+});
