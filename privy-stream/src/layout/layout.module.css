@@ -164,6 +164,24 @@
 .navLabel {
   font: 600 14px/1 var(--font-display);
 }
+.navSoon,
+.navSoon:hover {
+  color: var(--text-4);
+  background: transparent;
+  cursor: default;
+}
+.navSoon .navIco,
+.navSoon:hover .navIco {
+  color: var(--text-5);
+}
+.navSoonBadge {
+  margin-left: auto;
+  padding: 3px 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  font: 600 9px/1 var(--font-mono);
+  color: var(--text-4);
+}
 
 /* ---------- Player bar ---------- */
 .player {
@@ -461,6 +479,19 @@
   font: 600 15px/1 var(--font-display);
   color: var(--text-3);
 }
+.heroArtistRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+.heroFavSoon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-4);
+  font: 600 10px/1 var(--font-mono);
+}
 .waveWrap {
   display: flex;
   flex-direction: column;
@@ -716,6 +747,14 @@
 }
 .tabActive {
   color: var(--accent-text);
+}
+.tabSoon {
+  color: var(--text-4);
+  cursor: default;
+}
+.tabSoonBadge {
+  font: 600 8px/1 var(--font-mono);
+  color: var(--text-4);
 }
 
 @media (max-width: 720px) {

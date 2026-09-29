@@ -513,6 +513,8 @@ export function TrackTable({
   const cols = fav
     ? variant === 'library'
       ? s.colsLibraryFav
+      : variant === 'popular'
+        ? s.colsPopularFav
       : s.colsReleaseFav
     : variant === 'library'
       ? s.colsLibrary
@@ -587,8 +589,9 @@ export function TrackTable({
               /* Сердечко внутри строки-кнопки: гасим всплытие, чтобы клик не играл трек */
               <span
                 role="button"
-                tabIndex={0}
-                aria-pressed={fav.isFav(t)}
+                tabIndex={fav.soon ? -1 : 0}
+                aria-disabled={fav.soon || undefined}
+                aria-pressed={fav.soon ? undefined : fav.isFav(t)}
                 aria-label={fav.soon ? 'Избранное — скоро' : fav.isFav(t) ? 'Убрать из фонотеки' : 'Добавить в фонотеку'}
                 title={fav.soon ? 'Избранное — скоро' : fav.isFav(t) ? 'Убрать из фонотеки' : 'В фонотеку'}
                 className={cx(s.tFav, fav.isFav(t) && s.tFavOn, fav.soon && s.tFavSoon)}

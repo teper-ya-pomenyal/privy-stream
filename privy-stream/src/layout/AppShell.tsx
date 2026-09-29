@@ -121,19 +121,34 @@ function NavItem({
   label,
   icon,
   active,
+  soon,
 }: {
   to: string;
   label: string;
   icon: keyof typeof NAV_ICONS;
   active?: boolean;
+  soon?: boolean;
 }) {
   const Ico = NAV_ICONS[icon];
-  return (
-    <NavLink to={to} className={({ isActive }) => cx(s.navItem, (isActive || active) && s.active)}>
+  const content = (
+    <>
       <span className={s.navIco}>
         <Ico size={19} />
       </span>
       <span className={s.navLabel}>{label}</span>
+    </>
+  );
+  if (soon) {
+    return (
+      <span className={cx(s.navItem, s.navSoon)} aria-disabled="true" title={`${label} — скоро`}>
+        {content}
+        <span className={s.navSoonBadge}>скоро</span>
+      </span>
+    );
+  }
+  return (
+    <NavLink to={to} className={({ isActive }) => cx(s.navItem, (isActive || active) && s.active)}>
+      {content}
     </NavLink>
   );
 }
@@ -147,7 +162,7 @@ function Sidebar() {
       <nav className={s.nav}>
         <NavItem to="/catalog" label="Каталог" icon="catalog" active={inCatalog} />
         {!IS_WEB && <NavItem to="/servers" label="Узлы" icon="nodes" />}
-        {!IS_WEB && <NavItem to="/library" label="Фонотека" icon="library" />}
+        <NavItem to="/library" label="Фонотека" icon="library" soon={IS_WEB} />
       </nav>
       <nav className={s.nav}>
         <NavItem to="/settings" label="Настройки" icon="settings" />
@@ -163,15 +178,23 @@ function TabBar() {
 
   const tabs = [
     { to: '/catalog', label: 'Каталог', icon: 'catalog' as const, active: inCatalog },
-    { to: '/servers', label: 'Узлы', icon: 'nodes' as const, app: true },
-    { to: '/library', label: 'Фонотека', icon: 'library' as const, app: true },
+    ...(!IS_WEB ? [{ to: '/servers', label: 'Узлы', icon: 'nodes' as const }] : []),
+    { to: '/library', label: 'Фонотека', icon: 'library' as const, soon: IS_WEB },
     { to: '/settings', label: 'Настройки', icon: 'settings' as const },
-  ].filter((it) => !(IS_WEB && it.app));
+  ];
 
   return (
     <nav className={s.tabBar}>
       {tabs.map((it) => {
         const Ico = NAV_ICONS[it.icon];
+        if (it.soon) {
+          return (
+            <span key={it.to} className={cx(s.tabItem, s.tabSoon)} aria-disabled="true" title="Фонотека — скоро">
+              <span className={s.tabIco}><Ico size={21} /></span>
+              <span>Фонотека <span className={s.tabSoonBadge}>скоро</span></span>
+            </span>
+          );
+        }
         return (
           <NavLink key={it.to} to={it.to} className={({ isActive }) => cx(s.tabItem, (isActive || it.active) && s.tabActive)}>
             <span className={s.tabIco}>

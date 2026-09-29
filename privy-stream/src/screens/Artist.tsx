@@ -3,6 +3,7 @@ import { errorText } from '../api';
 import { useArtist } from '../api/queries';
 import { fmtNumber, plural } from '../lib/format';
 import { usePlayer } from '../store/player';
+import { useFavControl } from '../store/favorites';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
 import { ArtistAvatar, BackIcon, Button, Cover, EmptyState, ErrorNote, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
@@ -14,6 +15,7 @@ export function Artist() {
   const navigate = useNavigate();
   const artist = useArtist(node.host, id);
   const play = usePlayer((p) => p.play);
+  const fav = useFavControl();
   const a = artist.data;
 
   if (artist.isError) {
@@ -77,7 +79,7 @@ export function Artist() {
           <div className="t-section">Популярное</div>
           {a ? (
             a.popular.length ? (
-              <TrackTable variant="popular" header={false} tracks={a.popular} onPlay={(t) => play(t, a.popular)} />
+              <TrackTable variant="popular" header={false} tracks={a.popular} onPlay={(t) => play(t, a.popular)} fav={fav} />
             ) : (
               <div className={s.quietNote}>треков на узле нет</div>
             )

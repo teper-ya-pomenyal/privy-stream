@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
 import { wavePeaks } from '../lib/viz';
+import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
-import { CoverArt, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
+import { CoverArt, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
 import { pointerFraction, RepeatControl, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
 
@@ -67,7 +68,15 @@ function FullPlayerBody() {
             <div className={s.heroText}>
               {track.release && <div className={s.heroRelease}>{track.release}</div>}
               <h2 className={s.heroTitle}>{track.title}</h2>
-              <div className={s.heroArtist}>{track.artist}</div>
+              <div className={s.heroArtistRow}>
+                <span className={s.heroArtist}>{track.artist}</span>
+                {IS_WEB && (
+                  <span className={s.heroFavSoon} role="img" aria-label="Лайк трека — скоро" title="Лайк трека — скоро">
+                    <HeartIcon size={17} />
+                    <span>скоро</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

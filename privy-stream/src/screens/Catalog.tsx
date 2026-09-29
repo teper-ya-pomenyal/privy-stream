@@ -5,6 +5,7 @@ import { useBrowse, useSearch } from '../api/queries';
 import { IS_WEB } from '../platform/mode';
 import { useMobile } from '../lib/useMobile';
 import { usePlayer } from '../store/player';
+import { useFavControl } from '../store/favorites';
 import { useActiveNode } from '../store/servers';
 import { ArtistAvatar, Button, CloseIcon, Cover, EmptyState, ErrorNote, hostLabel, Screen, SearchIcon, Skeleton, TrackTable } from '../ui';
 import s from './screens.module.css';
@@ -45,6 +46,7 @@ function releasesOf(tracks: Track[]): Release[] {
 function CatalogView({ host, name }: { host: string; name: string }) {
   const navigate = useNavigate();
   const play = usePlayer((p) => p.play);
+  const fav = useFavControl();
   const mobile = useMobile();
   const [input, setInput] = useState('');
   const [filter, setFilter] = useState<Filter>('ВСЁ');
@@ -173,7 +175,7 @@ function CatalogView({ host, name }: { host: string; name: string }) {
         {result.tracks.length > 0 && (
           <section className={s.resultSection}>
             <div className="t-section">Треки</div>
-            <TrackTable variant="library" tracks={result.tracks} onPlay={(t) => play(t, result.tracks)} />
+            <TrackTable variant="library" tracks={result.tracks} onPlay={(t) => play(t, result.tracks)} fav={fav} />
           </section>
         )}
       </div>
