@@ -98,9 +98,9 @@ export function Servers() {
                   </span>
                   <span className={s.nodePing}>{n.status === 'online' && n.ping != null ? `${n.ping} ms` : '—'}</span>
                 </div>
-                {active ? (
-                  <span className={s.nodeCurrent}>Текущий</span>
-                ) : (
+                {/* «Текущий» — статус узла, а не действие; офлайн-текущему, кроме него, нужен и путь «Повторить». */}
+                {active && <span className={s.nodeCurrent}>Текущий</span>}
+                {(!active || state === 'offline') && (
                   <Button size="sm" onClick={() => void onConnect(n.id)}>
                     {n.status === 'online' ? 'Подключиться' : 'Повторить'}
                   </Button>

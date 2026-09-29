@@ -50,7 +50,10 @@ export const useServers = create<ServersState>()(
       async connect(id) {
         const { nodes, activeId, connectingId } = get();
         const node = nodes.find((n) => n.id === id);
-        if (!node || id === activeId || connectingId) return false;
+        if (!node || connectingId) return false;
+        // Уже активный и отвечающий узел не переподключаем. Офлайн-текущий —
+        // исключение: без повтора его строка на экране узлов остаётся без действия.
+        if (id === activeId && node.status === 'online') return false;
         // Для недоступного узла это «ПОВТОР»: handshake заново.
         set({ connectingId: id, error: '' });
         try {

@@ -48,6 +48,15 @@ it('connects only through the explicit button', async () => {
   await vi.waitFor(() => expect(nodeApi.probe).toHaveBeenCalledTimes(1));
 });
 
+it('offers retry for the current node when it is offline', async () => {
+  useServers.setState({ nodes: [node('n1', '10.0.0.1:1', 'offline')], activeId: 'n1' });
+  vi.mocked(nodeApi.probe).mockRejectedValue(new Error('503 · нет ответа'));
+  renderScreen();
+  expect(screen.getByText('Текущий')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+  await vi.waitFor(() => expect(nodeApi.probe).toHaveBeenCalledTimes(1));
+});
+
 it('labels the online count as a share of added nodes', () => {
   useServers.setState({ nodes: [node('n2', '10.0.0.2:2', 'online')], activeId: 'n2' });
   renderScreen();
