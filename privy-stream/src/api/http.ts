@@ -26,6 +26,7 @@ interface ApiTrack {
   album_name: string;
   explicit: boolean;
   duration_ms: number;
+  cover_path?: string;
 }
 interface ApiLightTrack {
   track_uuid: string;
@@ -41,6 +42,7 @@ interface ApiLightAlbum {
   album_uuid: string;
   album_name: string;
   created_at: string;
+  cover_path?: string;
 }
 interface ApiAlbum extends ApiLightAlbum {
   artist_uuid: string;
@@ -201,6 +203,7 @@ function fromTrack(t: ApiTrack, host: string): Track {
     release: t.album_name,
     durationSec: Math.round((t.duration_ms ?? 0) / 1000),
     explicit: t.explicit,
+    coverPath: t.cover_path || undefined,
     host,
   };
 }
@@ -224,6 +227,7 @@ function fromAlbum(a: ApiLightAlbum, artist: ApiArtist, flagged = false): Releas
     artist: artist.artist_name,
     flagged,
     createdAt: a.created_at,
+    coverPath: a.cover_path || undefined,
   };
 }
 
@@ -322,8 +326,9 @@ export const httpNodeApi: NodeApi = {
     try {
       await authed(host, `/catalog/tracks/${id(trackId)}/listened`, undefined, 'POST');
     } catch (e) {
-      // Сеть федеративная: на узле может стоять gateway без этого эндпоинта.
-      if (e instanceof NodeError && (e.code === 404 || e.code === 405)) return;
+      // Сеть федеративная: на узле может стоять gateway без этого эндпоинта (404/405),
+      // а 429 — «уже засчитано недавно» (лимит узла), оба случая не ошибки клиента.
+      if (e instanceof NodeError && (e.code === 404 || e.code === 405 || e.code === 429)) return;
       throw e;
     }
   },

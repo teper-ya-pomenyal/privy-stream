@@ -17,8 +17,7 @@ export interface NodeInfo {
 export type NodeDescriptor = Pick<NodeInfo, 'name' | 'owner' | 'access' | 'note'>;
 
 /**
- * Релиз (альбом). В API v1 у альбома есть только имя, артист и дата добавления,
- * поэтому год, жанр, формат и каталожный код — необязательные.
+ * Релиз (альбом). Год, жанр, формат и каталожный код API v1 не отдаёт — необязательные.
  */
 export interface Release {
   id: string;
@@ -33,6 +32,12 @@ export interface Release {
   format?: string;
   /** Когда релиз появился на узле (ISO) */
   createdAt?: string;
+  /**
+   * Путь файла обложки в хранилище узла (GET /catalog/albums/{id}, cover_path).
+   * Пусто — обложки нет. Сам файл контрактом пока не отдаётся:
+   * чтение обложек — запланированный GET /catalog/albums/{id}/cover.
+   */
+  coverPath?: string;
 }
 
 export interface Track {
@@ -46,6 +51,12 @@ export interface Track {
   durationSec: number;
   explicit?: boolean;
   format?: string;
+  /**
+   * Путь файла обложки в хранилище узла. Узел отдаёт его только в поиске
+   * (схема Track); в треклистах альбомов и артистов (LightTrack) поля нет,
+   * там обложку берут у альбома. Совпадает с cover_path альбома.
+   */
+  coverPath?: string;
   /** Узел, с которого стримится трек. Нет — трек локальный. */
   host?: string;
 }
@@ -130,7 +141,8 @@ export interface NodeApi {
   stream(host: string, trackId: string): Promise<string | null>;
   /**
    * Засчитать прослушивание (POST /catalog/tracks/{id}/listened). Узел хранит только
-   * общий счётчик трека, без привязки к пользователю. Узлы без эндпоинта молча пропускаются.
+   * общий счётчик трека, без привязки к пользователю. Молча пропускаются: узлы без
+   * эндпоинта (404/405) и ответ 429 — трек уже засчитан недавно, это не ошибка.
    */
   markListened(host: string, trackId: string): Promise<void>;
 }
