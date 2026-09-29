@@ -1,1 +1,5 @@
 .DS_Store
+
+# Рабочие заметки/планы, не для коммита
+*_PLAN.md
+docs/superpowers/plans/
