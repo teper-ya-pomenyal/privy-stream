@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
-import { AnimatePresence } from 'motion/react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { useEffect, useRef } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
 import { useFavorites } from '../store/favorites';
@@ -21,6 +21,10 @@ export function AppShell() {
   const setQueue = usePlayer((p) => p.setQueue);
   const fullscreen = usePlayer((p) => p.fullscreen);
   const mobile = useMobile();
+  const { pathname } = useLocation();
+  const outlet = useOutlet();
+  const reducedMotion = useReducedMotion();
+  const contentRef = useRef<HTMLElement>(null);
 
   useEffect(() => startListenReporter(), []);
 
@@ -36,8 +40,29 @@ export function AppShell() {
       <Header />
       <div className={s.body}>
         {!mobile && <Sidebar />}
-        <main className={s.content}>
-          <Outlet />
+        <main className={s.content} ref={contentRef}>
+          <AnimatePresence
+            initial={false}
+            mode="wait"
+            onExitComplete={() => {
+              if (mobile) window.scrollTo(0, 0);
+              else if (contentRef.current) contentRef.current.scrollTop = 0;
+            }}
+          >
+            {outlet && (
+              <motion.div
+                key={pathname}
+                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reducedMotion
+                  ? { opacity: 0, transition: { duration: 0.08 } }
+                  : { opacity: 0, y: -6, transition: { duration: 0.11, ease: 'easeIn' } }}
+                transition={{ duration: reducedMotion ? 0.12 : 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {outlet}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
       {mobile ? (
