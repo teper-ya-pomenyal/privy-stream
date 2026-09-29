@@ -3,14 +3,17 @@ import { NodeError, type NodeApi, type Track } from './types';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Адреса демо-узлов из макета — их обслуживает мок, а не HTTP. */
-export const isMockHost = (host: string) => MOCK_NODES.some((n) => n.host === host);
+/** Веб-конфиг отдаёт адрес с схемой (https://…) — мок знает узлы в виде host:port. */
+const bare = (host: string) => host.replace(/^https?:\/\//, '');
 
-const nodeIdOf = (host: string) => MOCK_NODES.find((n) => n.host === host)?.id;
+/** Адреса демо-узлов из макета — их обслуживает мок, а не HTTP. */
+export const isMockHost = (host: string) => MOCK_NODES.some((n) => n.host === bare(host));
+
+const nodeIdOf = (host: string) => MOCK_NODES.find((n) => n.host === bare(host))?.id;
 
 async function reachable(host: string, latency = 220) {
   await delay(latency);
-  const known = MOCK_NODES.find((n) => n.host === host);
+  const known = MOCK_NODES.find((n) => n.host === bare(host));
   if (known?.status === 'offline') throw new NodeError(503, `${host} не отвечает`);
 }
 
@@ -24,7 +27,7 @@ const tracksOn = (host: string): Track[] => {
 export const mockNodeApi: NodeApi = {
   async probe(host) {
     await reachable(host, 650);
-    const { name, owner, access, note, ping } = MOCK_NODES.find((n) => n.host === host)!;
+    const { name, owner, access, note, ping } = MOCK_NODES.find((n) => n.host === bare(host))!;
     return { descriptor: { name, owner, access, note }, ping: ping ?? 0 };
   },
 
