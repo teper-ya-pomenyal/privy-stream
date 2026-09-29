@@ -7,6 +7,7 @@ export const keys = {
   search: (host: string, query: string) => ['node', host, 'search', query] as const,
   release: (host: string, id: string) => ['node', host, 'release', id] as const,
   artist: (host: string, id: string) => ['node', host, 'artist', id] as const,
+  cover: (host: string, id: string) => ['node', host, 'cover', id] as const,
 };
 
 /** Полка узла; data === undefined и enabled === false, если узел её не отдаёт. */
@@ -33,3 +34,19 @@ export const useRelease = (host: string, id: string) =>
 
 export const useArtist = (host: string, id: string) =>
   useQuery({ queryKey: keys.artist(host, id), queryFn: () => nodeApi.artist(host, id) });
+
+/**
+ * Blob-URL обложки релиза; null — обложки нет или узел её не отдал (тогда UI
+ * рисует генеративную заглушку). coverUrl не бросает ошибок, поэтому здесь не
+ * бывает error. Файл неизменяем (перезагрузка создаёт новый cover_path),
+ * так что скачанный blob кэшируем до конца сессии.
+ */
+export function useCoverUrl(host?: string, releaseId?: string) {
+  return useQuery({
+    queryKey: keys.cover(host ?? '', releaseId ?? ''),
+    queryFn: () => nodeApi.coverUrl(host!, releaseId!),
+    enabled: !!host && !!releaseId,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+  });
+}

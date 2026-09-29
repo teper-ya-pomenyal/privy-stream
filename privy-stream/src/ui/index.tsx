@@ -1,6 +1,7 @@
 import { useState, type ButtonHTMLAttributes, type CSSProperties, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
 import { motion } from 'motion/react';
 import type { NodeInfo, Track } from '../api';
+import { useCoverUrl } from '../api/queries';
 import { fmtTime, trackNum } from '../lib/format';
 import { useCurrentTrack } from '../store/player';
 import { useSettings } from '../store/settings';
@@ -457,6 +458,47 @@ export function Cover({
       {flagged && <span className={s.coverFlag}>18+</span>}
     </div>
   );
+}
+
+/**
+ * Обложка релиза с реальной картинкой узла: если у релиза есть cover_path и узел
+ * отдал файл — фотография, иначе (и пока качается) генеративная заглушка по seed.
+ */
+export function NodeCover({
+  host,
+  releaseId,
+  seed,
+  code,
+  flagged,
+  className,
+  style,
+}: {
+  host?: string;
+  releaseId?: string;
+  seed: string;
+  code?: string;
+  flagged?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const { data: src } = useCoverUrl(host, releaseId);
+  return <Cover seed={seed} code={code} flagged={flagged} src={src ?? undefined} className={className} style={style} />;
+}
+
+/** Миниатюра плеера: картинка узла в том же классе, что и генеративная заглушка. */
+export function CoverThumb({
+  host,
+  releaseId,
+  seed,
+  className,
+}: {
+  host?: string;
+  releaseId?: string;
+  seed: string;
+  className?: string;
+}) {
+  const { data: src } = useCoverUrl(host, releaseId);
+  return src ? <img className={className} src={src} alt="" /> : <CoverArt seed={seed} className={className} />;
 }
 
 export function Screen({ children }: { children: ReactNode }) {

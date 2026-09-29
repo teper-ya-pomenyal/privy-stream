@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from
 import type { Track } from '../api';
 import { fmtTime } from '../lib/format';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
-import { CoverArt, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, RepeatOneIcon } from '../ui';
+import { CoverThumb, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, RepeatOneIcon } from '../ui';
 import s from './layout.module.css';
 
 /** Доля ширины элемента под курсором — для seek по полосе/волне. */
@@ -22,7 +22,7 @@ export function PlayerBar() {
   return (
     <div className={s.player}>
       <button type="button" className={s.nowPlaying} onClick={() => track && setFullscreen(true)}>
-        <div className={s.thumb}>{track && <CoverArt seed={track.releaseId || track.id} className={s.thumbArt} />}</div>
+        <div className={s.thumb}>{track && <CoverThumb host={track.host} releaseId={track.releaseId || track.id} seed={track.releaseId || track.id} className={s.thumbArt} />}</div>
         <div className={s.nowText}>
           <span className={cx(s.nowTitle, 'ellipsis')}>{track?.title ?? 'Очередь пуста'}</span>
           <span className={cx(s.nowSub, 'ellipsis')} style={error ? { color: 'var(--accent-text)' } : undefined} title={error || undefined}>
@@ -196,7 +196,7 @@ export function MiniPlayer() {
         {scrubbing && <span className={s.miniTime}>{fmtTime(position)}</span>}
       </div>
       <button type="button" className={s.nowPlaying} onClick={() => track && setFullscreen(true)}>
-        <div className={cx(s.thumb, s.miniThumb)}>{track && <CoverArt seed={track.releaseId || track.id} className={s.thumbArt} />}</div>
+        <div className={cx(s.thumb, s.miniThumb)}>{track && <CoverThumb host={track.host} releaseId={track.releaseId || track.id} seed={track.releaseId || track.id} className={s.thumbArt} />}</div>
         <div className={s.nowText}>
           <span className={cx(s.miniTitle, 'ellipsis')}>{track?.title ?? 'Очередь пуста'}</span>
           <span className={cx(s.nowSub, 'ellipsis')} style={error ? { color: 'var(--accent-text)' } : undefined}>

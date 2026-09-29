@@ -5,7 +5,7 @@ import { wavePeaks } from '../lib/viz';
 import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
-import { CoverArt, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
+import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
 import { pointerFraction, RepeatControl, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
 
@@ -63,7 +63,7 @@ function FullPlayerBody() {
         <div className={s.fullMain}>
           <div className={s.hero}>
             <div className={s.heroCover}>
-              <CoverArt seed={track.releaseId || track.id} className={s.heroArt} />
+              <CoverThumb host={track.host} releaseId={track.releaseId || track.id} seed={track.releaseId || track.id} className={s.heroArt} />
             </div>
             <div className={s.heroText}>
               {track.release && <div className={s.heroRelease}>{track.release}</div>}

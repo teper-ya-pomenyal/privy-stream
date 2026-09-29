@@ -322,6 +322,18 @@ export const httpNodeApi: NodeApi = {
     return URL.createObjectURL(await res.blob());
   },
 
+  async coverUrl(host, releaseId) {
+    try {
+      const res = await authed(host, `/catalog/albums/${id(releaseId)}/cover`);
+      const blob = await res.blob();
+      return blob.type.startsWith('image/') ? URL.createObjectURL(blob) : null;
+    } catch {
+      // Обложка — украшение: узел федеративной сети может быть без этого эндпоинта
+      // (404/405), без обложки, без сессии или вне сети — везде показываем заглушку.
+      return null;
+    }
+  },
+
   async markListened(host, trackId) {
     try {
       await authed(host, `/catalog/tracks/${id(trackId)}/listened`, undefined, 'POST');

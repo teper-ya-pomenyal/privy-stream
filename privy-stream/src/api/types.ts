@@ -34,8 +34,8 @@ export interface Release {
   createdAt?: string;
   /**
    * Путь файла обложки в хранилище узла (GET /catalog/albums/{id}, cover_path).
-   * Пусто — обложки нет. Сам файл контрактом пока не отдаётся:
-   * чтение обложек — запланированный GET /catalog/albums/{id}/cover.
+   * Пусто — обложки нет, показать генеративную заглушку. Сам файл читается
+   * методом coverUrl (GET /catalog/albums/{id}/cover).
    */
   coverPath?: string;
 }
@@ -139,6 +139,12 @@ export interface NodeApi {
   artist(host: string, id: string): Promise<ArtistDetails>;
   /** URL для <audio>. null — у узла нет потока для трека (мок). */
   stream(host: string, trackId: string): Promise<string | null>;
+  /**
+   * Blob-URL обложки релиза для <img>. null — обложки нет или узел не отдал её
+   * (старые gateway федеративной сети без GET .../cover). Как stream: <img> не
+   * отправляет Authorization, поэтому картинка качается авторизованным fetch.
+   */
+  coverUrl(host: string, releaseId: string): Promise<string | null>;
   /**
    * Засчитать прослушивание (POST /catalog/tracks/{id}/listened). Узел хранит только
    * общий счётчик трека, без привязки к пользователю. Молча пропускаются: узлы без

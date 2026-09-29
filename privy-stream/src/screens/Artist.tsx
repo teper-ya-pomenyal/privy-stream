@@ -6,7 +6,7 @@ import { usePlayer } from '../store/player';
 import { useFavControl } from '../store/favorites';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
-import { ArtistAvatar, BackIcon, Button, Cover, EmptyState, ErrorNote, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
+import { ArtistAvatar, BackIcon, Button, EmptyState, ErrorNote, NodeCover, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
 export function Artist() {
@@ -93,7 +93,7 @@ export function Artist() {
             {a && a.releases.length === 0 && <div className={s.quietNote}>релизов на узле нет</div>}
             {a?.releases.map((r) => (
               <div key={r.id} className={s.discoItem} onClick={() => navigate(`/album/${encodeURIComponent(r.id)}`)}>
-                <Cover seed={r.id} flagged={r.flagged} />
+                <NodeCover host={node.host} releaseId={r.id} seed={r.id} flagged={r.flagged} />
                 <div className={s.discoText}>
                   <span className={s.discoTitle}>{r.title}</span>
                   {releaseMeta(r) && <span className={s.discoMeta}>{releaseMeta(r)}</span>}

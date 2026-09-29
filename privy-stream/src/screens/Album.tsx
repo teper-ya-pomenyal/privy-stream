@@ -6,7 +6,7 @@ import { useFavControl } from '../store/favorites';
 import { usePlayer } from '../store/player';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
-import { BackIcon, Button, Cover, EmptyState, ErrorNote, PlayIcon, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
+import { BackIcon, Button, EmptyState, ErrorNote, NodeCover, PlayIcon, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
 export function Album() {
@@ -40,7 +40,7 @@ export function Album() {
       ) : (
         <div className={s.albumLayout}>
           <div className={s.albumAside}>
-            <div className={s.albumCover}>{r ? <Cover seed={r.id} code={r.code} flagged={r.flagged} /> : <Skeleton style={{ aspectRatio: '1' }} />}</div>
+            <div className={s.albumCover}>{r ? <NodeCover host={node.host} releaseId={r.id} seed={r.id} code={r.code} flagged={r.flagged} /> : <Skeleton style={{ aspectRatio: '1' }} />}</div>
             {r && (
               <div className={s.metaTable}>
                 {(

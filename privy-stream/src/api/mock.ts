@@ -87,6 +87,11 @@ export const mockNodeApi: NodeApi = {
     return null;
   },
 
+  // У мок-релизов нет файлов обложек — UI рисует генеративную заглушку.
+  async coverUrl() {
+    return null;
+  },
+
   async markListened() {},
 };
 

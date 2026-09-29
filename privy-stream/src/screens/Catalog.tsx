@@ -7,7 +7,7 @@ import { useMobile } from '../lib/useMobile';
 import { usePlayer } from '../store/player';
 import { useFavControl } from '../store/favorites';
 import { useActiveNode } from '../store/servers';
-import { ArtistAvatar, Button, CloseIcon, Cover, EmptyState, ErrorNote, hostLabel, Screen, SearchIcon, Skeleton, TrackTable } from '../ui';
+import { ArtistAvatar, Button, CloseIcon, EmptyState, ErrorNote, hostLabel, NodeCover, Screen, SearchIcon, Skeleton, TrackTable } from '../ui';
 import s from './screens.module.css';
 
 const FILTERS = ['ВСЁ', 'АРТИСТЫ', 'РЕЛИЗЫ', 'ТРЕКИ'] as const;
@@ -167,7 +167,7 @@ function CatalogView({ host, name }: { host: string; name: string }) {
             <div className="t-section">Релизы</div>
             <div className={s.grid}>
               {result.releases.map((r) => (
-                <ReleaseCard key={r.id} release={r} onOpen={() => openRelease(r.id)} />
+                <ReleaseCard key={r.id} release={r} host={host} onOpen={() => openRelease(r.id)} />
               ))}
             </div>
           </section>
@@ -243,10 +243,10 @@ export function releaseMeta(r: Release): string {
   return [r.year, r.genre?.toUpperCase()].filter(Boolean).join(' · ');
 }
 
-export function ReleaseCard({ release: r, onOpen }: { release: Release; onOpen: () => void }) {
+export function ReleaseCard({ release: r, host, onOpen }: { release: Release; host: string; onOpen: () => void }) {
   return (
     <div className={s.card} onClick={onOpen} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen()}>
-      <Cover seed={r.id} code={r.code} flagged={r.flagged} />
+      <NodeCover host={host} releaseId={r.id} seed={r.id} code={r.code} flagged={r.flagged} />
       <div className={s.cardText}>
         <div className={s.cardTitle}>{r.title}</div>
         <div className={s.cardArtist}>{r.artist}</div>

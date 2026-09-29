@@ -15,6 +15,7 @@ export const nodeApi: NodeApi = {
   release: (host, id) => pick(host).release(host, id),
   artist: (host, id) => pick(host).artist(host, id),
   stream: (host, trackId) => pick(host).stream(host, trackId),
+  coverUrl: (host, releaseId) => pick(host).coverUrl(host, releaseId),
   markListened: (host, trackId) => pick(host).markListened(host, trackId),
 };
 
