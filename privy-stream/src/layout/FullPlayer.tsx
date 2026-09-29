@@ -27,7 +27,7 @@ export function FullPlayer() {
   }, [setFullscreen]);
 
   if (!track) return null;
-  if (reducedMotion) return <FullPlayerBody />;
+  if (reducedMotion) return <div className={s.full}><FullPlayerBody /></div>;
 
   return (
     <motion.div
