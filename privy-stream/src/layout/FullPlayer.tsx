@@ -1,15 +1,12 @@
 import { useEffect } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
-import { wavePeaks } from '../lib/viz';
 import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
 import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
-import { pointerFraction, RepeatControl, VolumeControl } from './PlayerBar';
+import { RepeatControl, SeekBar, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
-
-const PEAKS = wavePeaks();
 
 /**
  * Полноэкранный плеер-шторка: открывается снизу и так же уезжает обратно
@@ -48,7 +45,6 @@ function FullPlayerBody() {
   const node = useActiveNode();
   const { queue, index, playing, position, error, toggle, next, prev, seek, play, setFullscreen } = usePlayer();
   const duration = useDuration();
-  const pct = duration ? (position / duration) * 100 : 0;
   // Внешний компонент рендерит тело только при наличии трека, но свой guard нужен TS.
   if (!track) return null;
 
@@ -81,15 +77,7 @@ function FullPlayerBody() {
           </div>
 
           <div className={s.waveWrap}>
-            <div className={s.wave} onClick={(e) => seek(pointerFraction(e))}>
-              {PEAKS.map((h, i) => (
-                <div
-                  key={i}
-                  className={s.waveBar}
-                  style={{ height: `${h}%`, background: (i / PEAKS.length) * 100 <= pct ? 'var(--accent)' : 'var(--line-ctrl)' }}
-                />
-              ))}
-            </div>
+            <SeekBar className={s.fullSeek} fillClassName={s.fullSeekFill} thumbClassName={s.fullSeekThumb} position={position} duration={duration} disabled={!duration} onSeek={seek} />
             <div className={s.waveMeta}>
               <span>{fmtTime(position)}</span>
               <span style={{ color: error ? 'var(--accent-text)' : 'var(--text-5)' }}>

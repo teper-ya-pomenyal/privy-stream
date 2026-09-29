@@ -497,19 +497,28 @@
   flex-direction: column;
   gap: 12px;
 }
-.wave {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 84px;
-  border-radius: var(--r-xs);
-  padding-bottom: 2px;
+/* Честная шкала прогресса полного плеера: пики волны появятся,
+   только когда узел начнёт отдавать реальные данные формы звука. */
+.fullSeek {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line-ctrl);
   cursor: pointer;
 }
-.waveBar {
-  flex: 1;
-  border-radius: 1px;
-  transition: background 0.2s;
+.fullSeekFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.fullSeekThumb {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
 }
 .waveMeta {
   display: flex;
@@ -838,9 +847,6 @@
   }
   .heroTitle {
     font-size: 32px;
-  }
-  .wave {
-    height: 64px;
   }
   .fullTransport {
     /* Ряд «назад · повтор · play · мьют · дальше» — тот же грид, что на десктопе;

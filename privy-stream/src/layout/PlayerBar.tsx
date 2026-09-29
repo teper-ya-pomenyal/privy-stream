@@ -13,11 +13,75 @@ export const pointerFraction = (e: MouseEvent<HTMLElement>) => {
 
 export const trackSubline = (t: Track) => (t.release ? `${t.artist} · ${t.release}` : t.artist);
 
+/**
+ * Шкала прогресса: клик, перетаскивание, стрелки ±10 с, Home/End.
+ * Презентационная — состояние в пропсах, чтобы тестировать без аудио.
+ */
+export function SeekBar({
+  position,
+  duration,
+  onSeek,
+  className,
+  fillClassName,
+  thumbClassName,
+  label = 'Позиция в треке',
+  disabled = false,
+}: {
+  position: number;
+  duration: number;
+  onSeek: (fraction: number) => void;
+  className?: string;
+  fillClassName?: string;
+  thumbClassName?: string;
+  label?: string;
+  disabled?: boolean;
+}) {
+  const pct = duration > 0 ? Math.min(100, (position / duration) * 100) : 0;
+  const drag = (e: PointerEvent<HTMLDivElement>) => {
+    if (disabled || e.buttons !== 1) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // синтетическое событие без активного указателя (jsdom, тесты) — просто seek
+    }
+    onSeek(pointerFraction(e));
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (disabled || !duration) return;
+    const step = { ArrowRight: 10, ArrowUp: 10, ArrowLeft: -10, ArrowDown: -10 }[e.key];
+    if (step !== undefined) {
+      e.preventDefault();
+      onSeek((position + step) / duration);
+    } else if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      onSeek(e.key === 'Home' ? 0 : 1);
+    }
+  };
+  return (
+    <div
+      role="slider"
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled || undefined}
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={Math.round(duration)}
+      aria-valuenow={Math.round(position)}
+      aria-valuetext={`${fmtTime(position)} из ${fmtTime(duration)}`}
+      className={className}
+      onPointerDown={drag}
+      onPointerMove={drag}
+      onKeyDown={onKey}
+    >
+      <div className={fillClassName} style={{ width: `${pct}%` }} />
+      {pct > 0 && <div className={thumbClassName} style={{ left: `${pct}%` }} />}
+    </div>
+  );
+}
+
 export function PlayerBar() {
   const track = useCurrentTrack();
   const { playing, position, loading, error, toggle, next, prev, seek, setFullscreen } = usePlayer();
   const duration = useDuration();
-  const pct = duration ? Math.min(100, (position / duration) * 100) : 0;
 
   return (
     <div className={s.player}>
@@ -51,10 +115,7 @@ export function PlayerBar() {
         </div>
         <div className={s.progressRow}>
           <span className={s.time}>{fmtTime(position)}</span>
-          <div className={s.progress} onClick={(e) => seek(pointerFraction(e))}>
-            <div className={s.progressFill} style={{ width: `${pct}%` }} />
-            {pct > 0 && <div className={s.progressThumb} style={{ left: `${pct}%` }} />}
-          </div>
+          <SeekBar className={s.progress} fillClassName={s.progressFill} thumbClassName={s.progressThumb} position={position} duration={duration} disabled={!duration} onSeek={seek} />
           <span className={cx(s.time, s.timeRight)}>{fmtTime(duration)}</span>
         </div>
       </div>
