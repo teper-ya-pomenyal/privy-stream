@@ -308,7 +308,7 @@ function WebNode({ name, host, online }: { name: string; host: string; online: b
  * без узла регистрироваться негде.
  */
 function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
-  const { nodes, activeId, pick, add, adding, error, clearError, checkActive } = useServers();
+  const { nodes, activeId, pick, add, connect, adding, error, clearError, checkActive } = useServers();
   const node = useActiveNodeOrNull();
   const [host, setHost] = useState('');
   // Узел, который сохранили, но handshake не прошёл: адрес остаётся в поле, кнопка становится «Повторить».
@@ -317,7 +317,9 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
 
   function close() {
     clearError();
-    setHost('');
+    // Сбрасываем только запомненный офлайн-узел: иначе повторно открытая форма
+    // показывает «Повторить» про старый узел. Введённый адрес остаётся, как оставил пользователь.
+    setSavedOfflineId(null);
     setOpen(false);
   }
 
@@ -339,12 +341,10 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
 
   async function retrySaved() {
     if (!savedOfflineId) return;
-    // Узел уже активен (submitAdd вызвал pick); connect() стор пропускает только
-    // когда активный узел уже онлайн, — для неотвечающего handshake заново
-    // делает checkActive, а не add().
-    await checkActive();
-    const online = useServers.getState().nodes.find((n) => n.id === savedOfflineId)?.status === 'online';
-    if (online) {
+    // Узел уже в списке — это handshake заново, а не add(); active-offline
+    // допускается guard'ом стора (блокируется только уже отвечающий активный).
+    const ok = await connect(savedOfflineId);
+    if (ok) {
       setSavedOfflineId(null);
       setHost('');
       setOpen(false);
