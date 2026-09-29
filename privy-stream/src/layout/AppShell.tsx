@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
@@ -47,7 +48,8 @@ export function AppShell() {
       ) : (
         <PlayerBar />
       )}
-      {fullscreen && <FullPlayer />}
+      {/* AnimatePresence играет выезд шторки плеера при закрытии */}
+      <AnimatePresence>{fullscreen && <FullPlayer />}</AnimatePresence>
       <AudioEngine />
     </div>
   );

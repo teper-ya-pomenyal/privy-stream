@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
 import { wavePeaks } from '../lib/viz';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
@@ -9,12 +10,15 @@ import s from './layout.module.css';
 
 const PEAKS = wavePeaks();
 
+/**
+ * Полноэкранный плеер-шторка: открывается снизу и так же уезжает обратно
+ * (AnimatePresence в AppShell держит его в дереве на время выезда).
+ * При reduced motion — мгновенно, без трансформа.
+ */
 export function FullPlayer() {
   const track = useCurrentTrack();
-  const node = useActiveNode();
-  const { queue, index, playing, position, error, toggle, next, prev, seek, play, setFullscreen } = usePlayer();
-  const duration = useDuration();
-  const pct = duration ? (position / duration) * 100 : 0;
+  const setFullscreen = usePlayer((p) => p.setFullscreen);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setFullscreen(false);
@@ -23,9 +27,32 @@ export function FullPlayer() {
   }, [setFullscreen]);
 
   if (!track) return null;
+  if (reducedMotion) return <FullPlayerBody />;
 
   return (
-    <div className={s.full}>
+    <motion.div
+      className={s.full}
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+    >
+      <FullPlayerBody />
+    </motion.div>
+  );
+}
+
+function FullPlayerBody() {
+  const track = useCurrentTrack();
+  const node = useActiveNode();
+  const { queue, index, playing, position, error, toggle, next, prev, seek, play, setFullscreen } = usePlayer();
+  const duration = useDuration();
+  const pct = duration ? (position / duration) * 100 : 0;
+  // Внешний компонент рендерит тело только при наличии трека, но свой guard нужен TS.
+  if (!track) return null;
+
+  return (
+    <>
       <div className={s.fullBar}>
         <div className={s.fullBarLabel}>СЕЙЧАС ИГРАЕТ</div>
         <TextLink onClick={() => setFullscreen(false)}>Свернуть</TextLink>
@@ -112,6 +139,6 @@ export function FullPlayer() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
