@@ -312,12 +312,12 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
 
   async function submitAdd() {
     if (adding) return;
-    const id = await add(host);
-    if (!id) return; // ошибка ввода — остаётся в форме
+    const added = await add(host);
+    if (!added) return; // ошибка ввода — остаётся в форме
     setHost('');
     setOpen(false);
     // pick() выставит 503, если узел не ответил на handshake.
-    pick(id);
+    pick(added.id);
   }
 
   return (

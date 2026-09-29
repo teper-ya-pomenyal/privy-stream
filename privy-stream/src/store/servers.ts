@@ -20,8 +20,8 @@ interface ServersState {
   pick: (id: string) => void;
   /** Handshake с узлом; true — узел стал активным. */
   connect: (id: string) => Promise<boolean>;
-  /** Пробить узел и добавить в список. Возвращает id нового узла или null при ошибке ввода. */
-  add: (host: string) => Promise<string | null>;
+  /** Пробить узел и добавить в список. online: false — адрес сохранён, но узел не ответил. */
+  add: (host: string) => Promise<{ id: string; online: boolean } | null>;
   clearError: () => void;
   /** Веб-версия: единственный узел из config.json, сменить его нельзя. */
   initWeb: (node: { url: string; name: string }) => void;
@@ -88,6 +88,7 @@ export const useServers = create<ServersState>()(
           const { descriptor, ping } = await nodeApi.probe(host);
           const node: NodeInfo = { ...base, ...descriptor, ping, status: 'online' };
           set((s) => ({ nodes: [...s.nodes, node], adding: false }));
+          return { id: base.id, online: true };
         } catch (e) {
           // Узел всё равно добавляем — он может подняться позже.
           const node: NodeInfo = {
@@ -99,9 +100,14 @@ export const useServers = create<ServersState>()(
             ping: null,
             status: 'offline',
           };
-          set((s) => ({ nodes: [...s.nodes, node], adding: false, error: errorText(e) }));
+          // Причина — плюс пометка «сохранён», чтобы экран добавления отличил её от ошибки ввода.
+          set((s) => ({
+            nodes: [...s.nodes, node],
+            adding: false,
+            error: `${errorText(e)} · адрес сохранён — узел не отвечает`,
+          }));
+          return { id: base.id, online: false };
         }
-        return base.id;
       },
 
       clearError: () => set({ error: '' }),
