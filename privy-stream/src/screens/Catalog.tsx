@@ -190,28 +190,22 @@ function CatalogView({ host, name }: { host: string; name: string }) {
           Музыка из <span className={s.catalogHost}>{hostLabel(host)}</span> · поиск идёт только на выбранном узле
         </div>
         {searchBox}
-        {/* Имена классов не пересекаются с вкладками входа (s.tabs/s.tab заняты ими) */}
-        <div className={s.filterBar}>
-          {FILTERS.map((f) => {
-            // Разделы поиска на полке недоступны: полка показывает только релизы.
-            const offShelf = !searching && SEARCH_ONLY.includes(f);
-            const count = f === 'ВСЁ' ? total : f === 'АРТИСТЫ' ? result.artists.length : f === 'РЕЛИЗЫ' ? result.releases.length : result.tracks.length;
-            return (
-              <button
-                key={f}
-                type="button"
-                className={s.filterTab}
-                data-on={filter === f ? '' : undefined}
-                disabled={offShelf}
-                title={offShelf ? 'Раздел появится, когда введёшь запрос' : undefined}
-                onClick={() => setFilter(f)}
-              >
-                {f === 'ВСЁ' ? 'Все' : f === 'АРТИСТЫ' ? 'Артисты' : f === 'РЕЛИЗЫ' ? 'Релизы' : 'Треки'}
-                {searching && count > 0 && <span className={s.filterCount}>{count}</span>}
-              </button>
-            );
-          })}
-        </div>
+        {/* Вкладки разделов видны только во время поиска: полка узла отдаёт одни
+            релизы, поэтому вне поиска разделам «Артисты»/«Треки» нечего показывать. */}
+        {searching && (
+          <div className={s.filterBar}>
+            {/* Имена классов не пересекаются с вкладками входа (s.tabs/s.tab заняты ими) */}
+            {FILTERS.map((f) => {
+              const count = f === 'ВСЁ' ? total : f === 'АРТИСТЫ' ? result.artists.length : f === 'РЕЛИЗЫ' ? result.releases.length : result.tracks.length;
+              return (
+                <button key={f} type="button" className={s.filterTab} data-on={filter === f ? '' : undefined} onClick={() => setFilter(f)}>
+                  {f === 'ВСЁ' ? 'Все' : f === 'АРТИСТЫ' ? 'Артисты' : f === 'РЕЛИЗЫ' ? 'Релизы' : 'Треки'}
+                  {count > 0 && <span className={s.filterCount}>{count}</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {body}
