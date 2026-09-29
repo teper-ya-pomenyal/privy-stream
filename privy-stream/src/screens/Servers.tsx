@@ -21,7 +21,11 @@ export function Servers() {
   }
 
   async function onAdd() {
-    if (await add(newHost)) setNewHost('');
+    // null — ошибка ввода: поле остаётся, причина уже показана в ErrorNote.
+    // Офлайн-узел тоже попадает в список, но адрес не чистим: он может подняться позже.
+    const result = await add(newHost);
+    if (!result) return;
+    if (result.online) setNewHost('');
   }
 
   return (
@@ -31,7 +35,7 @@ export function Servers() {
         sub={
           <>
             Единого сервера нет. Любой может поднять свой узел, залить туда фонотеку и раздать адрес. Клиент подключается к
-            узлу и ищет музыку только на нём. Сейчас в сети: {online} из {nodes.length}.
+            узлу и ищет музыку только на нём. Доступны из добавленных узлов: {online} из {nodes.length}.
           </>
         }
       />
@@ -73,7 +77,8 @@ export function Servers() {
           const st = NODE_STATUS[state];
           const active = n.id === activeId;
           return (
-            <div key={n.id} className={cx(s.nodeRow, active && s.nodeRowActive)} onClick={() => void onConnect(n.id)}>
+            // Клик по строке не подключает: единственный путь к узлу — явная кнопка справа.
+            <div key={n.id} className={cx(s.nodeRow, active && s.nodeRowActive)}>
               <div className={s.nodeMain}>
                 <StatusDot color={st.dot} blink={state === 'connecting' ? '0.7s' : undefined} style={{ marginTop: 7 }} />
                 <div className={s.nodeText}>
@@ -93,16 +98,13 @@ export function Servers() {
                   </span>
                   <span className={s.nodePing}>{n.status === 'online' && n.ping != null ? `${n.ping} ms` : '—'}</span>
                 </div>
-                <Button
-                  size="sm"
-                  selected={active}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void onConnect(n.id);
-                  }}
-                >
-                  {active ? 'Текущий' : n.status === 'online' ? 'Подключиться' : 'Повторить'}
-                </Button>
+                {active ? (
+                  <span className={s.nodeCurrent}>Текущий</span>
+                ) : (
+                  <Button size="sm" onClick={() => void onConnect(n.id)}>
+                    {n.status === 'online' ? 'Подключиться' : 'Повторить'}
+                  </Button>
+                )}
               </div>
             </div>
           );

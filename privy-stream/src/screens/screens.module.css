@@ -258,6 +258,7 @@
   flex-direction: column;
   gap: 8px;
 }
+/* Строка не кликабельна: подключение — только через кнопку в строке. */
 .nodeRow {
   display: flex;
   flex-wrap: wrap;
@@ -266,14 +267,9 @@
   padding: var(--node-pad-y) 16px;
   border: 1px solid transparent;
   border-radius: var(--r-md);
-  cursor: pointer;
   transition:
     background 0.14s,
     border-color 0.14s;
-}
-.nodeRow:hover {
-  background: var(--bg-card);
-  border-color: var(--line);
 }
 .nodeRowActive,
 .nodeRowActive:hover {
@@ -320,6 +316,12 @@
   align-items: center;
   gap: 18px;
   margin-left: auto;
+}
+/* Статус активного узла вместо кнопки: не действие, а состояние. */
+.nodeCurrent {
+  font: 600 11px/1 var(--font-mono);
+  color: var(--accent-text);
+  white-space: nowrap;
 }
 .nodeStatus {
   display: flex;
