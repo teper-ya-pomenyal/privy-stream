@@ -1002,17 +1002,24 @@
   .albumLayout {
     gap: 26px;
   }
+  /* Узкий экран: компактная обложка → название и «Слушать» → треклист;
+     метаданные (каталог, год, формат, узел) уходят под треклист.
+     display: contents выпускает обложку и метаданные на уровень albumLayout,
+     где их расставляет order. */
   .albumAside {
-    flex-basis: 100%;
-    max-width: none;
+    display: contents;
   }
   .albumCover {
-    width: min(100%, 320px);
-    align-self: center;
+    order: 1;
+    width: min(100%, 240px);
+    margin-inline: auto;
   }
   .albumMain {
-    flex-basis: 100%;
+    order: 2;
     gap: 22px;
+  }
+  .metaTable {
+    order: 3;
   }
   .albumTitle {
     font-size: 32px;
