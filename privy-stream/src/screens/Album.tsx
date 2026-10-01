@@ -3,24 +3,13 @@ import { useNavigate, useParams } from 'react-router';
 import { errorText } from '../api';
 import { useRelease } from '../api/queries';
 import { fmtTime, plural } from '../lib/format';
+import { shareOrCopy } from '../lib/share';
 import { useFavControl } from '../store/favorites';
 import { usePlayer } from '../store/player';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
 import { BackIcon, Button, EmptyState, ErrorNote, NodeCover, PlayIcon, Screen, ShareIcon, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
-
-/** Fallback для не-secure контекстов (web-сборка по plain http в локальной сети). */
-function legacyCopy(text: string) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.opacity = '0';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  ta.remove();
-}
 
 /** «Поделиться»: системный шер, если есть, иначе — текст релиза в буфер обмена. */
 function ShareButton({ title, artist, code, host }: { title: string; artist: string; code?: string; host: string }) {
@@ -40,22 +29,7 @@ function ShareButton({ title, artist, code, host }: { title: string; artist: str
     const text = [`«${title}» — ${artist} · Privy Stream`, `Узел: ${host}`, code && `Каталог: ${code}`, url]
       .filter(Boolean)
       .join('\n');
-    let shared = false;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text, url: url || undefined });
-        shared = true;
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') return; // отменил шер — не ошибка и не копия
-      }
-    }
-    if (shared) return;
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      legacyCopy(text);
-    }
-    flashCopied();
+    if ((await shareOrCopy(text, title, url || undefined)) === 'copied') flashCopied();
   };
 
   return (

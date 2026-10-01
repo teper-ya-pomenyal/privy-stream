@@ -110,3 +110,20 @@ it('keeps the volume popover open for a grace period after the cursor leaves', (
     vi.useRealTimers();
   }
 });
+
+it('places the share button next to the like badge and copies the track text', async () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  renderPlayer();
+  // Порядок: артист, бейдж будущего лайка, кнопка «поделиться» после него
+  const fav = screen.getByLabelText('Лайк трека — скоро');
+  const share = screen.getByRole('button', { name: 'поделиться' });
+  expect(after(fav, share)).toBe(true);
+  fireEvent.click(share);
+  await act(async () => {});
+  expect(writeText).toHaveBeenCalledTimes(1);
+  const text = writeText.mock.calls[0][0] as string;
+  expect(text).toContain('«Track-a» — Artist · Privy Stream');
+  expect(text).toContain('Узел: 10.0.0.5:8080');
+  expect(screen.getByRole('button', { name: 'скопировано' })).toBeInTheDocument();
+});

@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
+import { shareOrCopy } from '../lib/share';
 import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
-import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
+import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, ShareIcon, TextLink } from '../ui';
 import { RepeatControl, SeekBar, ShuffleControl, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
 
@@ -67,10 +68,13 @@ function FullPlayerBody() {
               <div className={s.heroArtistRow}>
                 <span className={s.heroArtist}>{track.artist}</span>
                 {IS_WEB && (
-                  <span className={s.heroFavSoon} role="img" aria-label="Лайк трека — скоро" title="Лайк трека — скоро">
-                    <HeartIcon size={17} />
-                    <span>скоро</span>
-                  </span>
+                  <>
+                    <span className={s.heroFavSoon} role="img" aria-label="Лайк трека — скоро" title="Лайк трека — скоро">
+                      <HeartIcon size={17} />
+                      <span>скоро</span>
+                    </span>
+                    <HeroShare title={track.title} artist={track.artist} host={node.host} />
+                  </>
                 )}
               </div>
             </div>
@@ -141,5 +145,28 @@ function FullPlayerBody() {
         </div>
       </div>
     </>
+  );
+}
+
+/** «Поделиться» у артиста: текст трека — в системный шер, иначе в буфер обмена. */
+function HeroShare({ title, artist, host }: { title: string; artist: string; host: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const share = async () => {
+    const url = location.protocol.startsWith('http') ? location.href : '';
+    const text = [`«${title}» — ${artist} · Privy Stream`, `Узел: ${host}`, url].filter(Boolean).join('\n');
+    if ((await shareOrCopy(text, title, url || undefined)) === 'copied') {
+      setCopied(true);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button type="button" className={s.heroShare} onClick={share} title="Поделиться треком">
+      <ShareIcon size={13} />
+      <span>{copied ? 'скопировано' : 'поделиться'}</span>
+    </button>
   );
 }
