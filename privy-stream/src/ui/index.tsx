@@ -49,6 +49,27 @@ export function NextIcon({ size = 14 }: IconProps) {
   );
 }
 
+export function ShareIcon({ size = 16 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="6" cy="12" r="2.6" />
+      <circle cx="17.5" cy="5.5" r="2.6" />
+      <circle cx="17.5" cy="18.5" r="2.6" />
+      <path d="M8.4 10.8l6.8-4M8.4 13.2l6.8 4" />
+    </svg>
+  );
+}
+
 const stroke = {
   fill: 'none',
   stroke: 'currentColor',
