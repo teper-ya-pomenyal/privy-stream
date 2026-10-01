@@ -31,17 +31,12 @@ export function AudioEngine() {
     if (!host) return setSource({ kind: 'clock' });
 
     let cancelled = false;
-    let url: string | null = null;
     setSource({ kind: 'pending' });
     setMedia({ loading: true });
     nodeApi
       .stream(host, trackId)
       .then((u) => {
-        if (cancelled) {
-          if (u) URL.revokeObjectURL(u);
-          return;
-        }
-        url = u;
+        if (cancelled) return;
         setMedia({ loading: false });
         setSource(u ? { kind: 'audio', url: u } : { kind: 'clock' });
       })
@@ -52,7 +47,6 @@ export function AudioEngine() {
       });
     return () => {
       cancelled = true;
-      if (url) URL.revokeObjectURL(url);
     };
   }, [trackId, host]);
 
@@ -99,7 +93,7 @@ export function AudioEngine() {
     <audio
       ref={audioRef}
       src={source.url}
-      preload="auto"
+      preload="metadata"
       onLoadedMetadata={(e) => {
         const d = e.currentTarget.duration;
         if (Number.isFinite(d) && d > 0) usePlayer.getState().setMedia({ mediaDuration: d });

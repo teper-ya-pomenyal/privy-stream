@@ -165,13 +165,13 @@ function refreshTokens(host: string, current: AuthTokens): Promise<AuthTokens> {
 }
 
 /** Запрос с Bearer-токеном (по умолчанию GET); при 401 один раз обновляет пару токенов и повторяет. */
-async function authed(host: string, path: string, messages?: ErrorMessages, method = 'GET'): Promise<Response> {
+async function authed(host: string, path: string, messages?: ErrorMessages, method = 'GET', headers?: Record<string, string>): Promise<Response> {
   let tokens = await secrets.get(host);
   if (!tokens) {
     onAuthExpired(host);
     throw new NodeError(401, 'нет сессии на этом узле, войди заново');
   }
-  const request = (t: AuthTokens) => send(host, path, { method, headers: { Authorization: `Bearer ${t.access}` } });
+  const request = (t: AuthTokens) => send(host, path, { method, headers: { Authorization: `Bearer ${t.access}`, ...headers } });
 
   let res = await request(tokens);
   if (res.status === 401) {
@@ -311,15 +311,20 @@ export const httpNodeApi: NodeApi = {
   },
 
   async stream(host, trackId) {
-    // /stream требует заголовок Authorization, а <audio src> его не отправляет.
-    // Пока трек скачивается целиком и играет из памяти. Range-стриминг — через
-    // кастомный протокол Tauri на стороне Rust (см. README).
-    const res = await authed(host, `/stream/${id(trackId)}`, {
+    // Проба первым байтом: <audio> не читает статусы ответа, а 403 (18+) и 404
+    // надо показать внятно. ServeContent отвечает 206 на один байт, CORS узла
+    // уже разрешает заголовок Range.
+    await authed(host, `/stream/${id(trackId)}`, {
       403: 'трек 18+ заблокирован для твоего аккаунта',
       404: 'трек не найден на узле',
       500: 'узел не смог отдать файл трека',
-    });
-    return URL.createObjectURL(await res.blob());
+    }, 'GET', { Range: 'bytes=0-0' });
+    // <audio src> заголовки не отправляет — авторизация стрима по короткоживущему
+    // токену в query: файл браузер тянет сам по Range-запросам по мере игры.
+    const res = await authed(host, '/stream/token', {}, 'POST');
+    const { stream_token: token } = (await res.json().catch(() => ({}))) as { stream_token?: string };
+    if (!token) throw new NodeError(502, 'узел не выдал стрим-токен');
+    return `${baseUrl(host)}/stream/${id(trackId)}?access_token=${encodeURIComponent(token)}`;
   },
 
   async coverUrl(host, releaseId) {
