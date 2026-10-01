@@ -563,17 +563,24 @@
   font-variant-numeric: tabular-nums;
 }
 .fullTransport {
-  /* Слева кластер «перемешать · назад · play · дальше · повтор», справа —
-     громкость одной кнопкой: полоса-регулятор спрятана в поповер */
-  display: flex;
+  /* Кластер «перемешать · назад · play · дальше · повтор» — по центру колонки:
+     play на одной вертикали с «поток с узла» над ним. Сетки 1fr auto 1fr с
+     пустой первой колонкой держат центр независимо от ширины громкости справа —
+     одной кнопкой, полоса-регулятор спрятана в поповер */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
 }
 .transportCluster {
+  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 16px;
+}
+.fullTransport .volume {
+  grid-column: 3;
+  justify-self: end;
 }
 /* Повтор и «без звука» — зеркальные боксы вокруг play, размером с «назад/дальше» */
 .repBtn,
@@ -883,9 +890,11 @@
     font-size: 32px;
   }
   .fullTransport {
-    /* Кластер с перемешиванием шире прежнего ряда — на узких экранах позволяем
-       громкости перенестись второй строкой, а зазор в кластере сжимаем */
+    /* Кластер с перемешиванием шире прежнего ряда — на узких экранах громкость
+       переносится второй строкой, ряды выровнены по центру, зазор в кластере сжимаем */
+    display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     row-gap: 10px;
     gap: 10px;
   }
