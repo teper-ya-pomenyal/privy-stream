@@ -177,6 +177,55 @@
 .chipAdd:hover {
   color: var(--text);
 }
+/* Чип обёрнут в div: кнопка удаления не может лежать внутри чипа-кнопки. */
+.chipWrap {
+  position: relative;
+  min-width: 0;
+}
+.chipWrap > .chip {
+  width: 100%;
+}
+/* Крестик на углу чипа; прозрачен, пока чип не под курсором,
+   но из дерева доступности не исчезает (opacity, не display). */
+.chipRemove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--line-input);
+  border-radius: 50%;
+  background: var(--bg-panel);
+  color: var(--text-5);
+  opacity: 0;
+  transition:
+    opacity 0.12s,
+    color 0.12s,
+    border-color 0.12s;
+}
+.chipWrap:hover .chipRemove,
+.chipRemove:focus-visible {
+  opacity: 1;
+}
+.chipRemove:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+/* Тач-устройства: наведения нет, :focus-visible по тапу не срабатывает —
+   крестик удаления виден всегда и крупнее под палец */
+@media (hover: none) {
+  .chipRemove {
+    top: -9px;
+    right: -9px;
+    width: 24px;
+    height: 24px;
+    opacity: 1;
+  }
+}
 /* Адрес в чипе: различает узлы с одинаковым именем. */
 .chipHost {
   font: 500 10px/1 var(--font-mono);

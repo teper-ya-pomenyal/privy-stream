@@ -6,11 +6,13 @@ import { Button, cx, ErrorNote, NODE_STATUS, nodeState, PrefixedInput, Screen, S
 import s from './screens.module.css';
 
 export function Servers() {
-  const { nodes, activeId, connectingId, adding, error, connect, add, clearError } = useServers();
+  const { nodes, activeId, connectingId, adding, error, connect, add, remove, clearError } = useServers();
   const online = useOnlineCount();
   const activate = useSession((x) => x.activate);
   const navigate = useNavigate();
   const [newHost, setNewHost] = useState('');
+  // Двухшаговое удаление: «Удалить» → «Точно?» — второй клик удаляет.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   async function onConnect(id: string) {
     if (!(await connect(id))) return;
@@ -26,6 +28,12 @@ export function Servers() {
     const result = await add(newHost);
     if (!result) return;
     if (result.online) setNewHost('');
+  }
+
+  function onRemove(id: string) {
+    setConfirmId(null);
+    // Удаление узла с открытой сессией разлогинивает: App сам вернётся на экран входа.
+    void remove(id);
   }
 
   return (
@@ -103,6 +111,19 @@ export function Servers() {
                 {(!active || state === 'offline') && (
                   <Button size="sm" onClick={() => void onConnect(n.id)}>
                     {n.status === 'online' ? 'Подключиться' : 'Повторить'}
+                  </Button>
+                )}
+                {confirmId === n.id ? (
+                  <Button
+                    size="sm"
+                    onClick={() => onRemove(n.id)}
+                    onMouseLeave={() => setConfirmId((x) => (x === n.id ? null : x))}
+                  >
+                    Точно?
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="quiet" onClick={() => setConfirmId(n.id)}>
+                    Удалить
                   </Button>
                 )}
               </div>

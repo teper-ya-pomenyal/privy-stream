@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <!-- Федеративная сеть: узлы могут быть на любом IP по plain HTTP,
+         ATS по умолчанию режет http:// на не-loopback хостах. -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+      <key>NSAllowsArbitraryLoads</key>
+      <true/>
+    </dict>
+    <!-- macOS 15+: без этого описания запросы в локальную сеть тихо запрещаются. -->
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Приложение подключается к твоим узлам Privy Stream в локальной сети: проверяет их доступность, входит в аккаунт и играет музыку с выбранного сервера.</string>
+  </dict>
+</plist>

@@ -62,3 +62,13 @@ it('labels the online count as a share of added nodes', () => {
   renderScreen();
   expect(screen.getByText(/Доступны из добавленных узлов: 1 из 1/)).toBeInTheDocument();
 });
+
+it('removes a node only after an explicit confirmation', async () => {
+  useServers.setState({ nodes: [node('n1', '10.0.0.1:1', 'offline'), node('n2', '10.0.0.2:2', 'online')], activeId: '' });
+  renderScreen();
+  fireEvent.click(screen.getAllByRole('button', { name: 'Удалить' })[0]);
+  // Подтверждение не дано — список не тронут.
+  expect(useServers.getState().nodes).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Точно?' }));
+  await vi.waitFor(() => expect(useServers.getState().nodes.map((n) => n.id)).toEqual(['n2']));
+});

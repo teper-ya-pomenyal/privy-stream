@@ -61,7 +61,7 @@ it('shows unavailability and a recheck action before the form is submitted', asy
 it('keeps the address and offers a retry when the added node does not answer', async () => {
   vi.mocked(nodeApi.probe).mockRejectedValue(new Error('503 · таймаут'));
   render(<Auth />); // узлов нет — форма добавления открыта сразу
-  const input = screen.getByPlaceholderText('10.0.0.5:8443');
+  const input = screen.getByPlaceholderText('10.0.0.5:8080');
   await userEvent.type(input, '10.0.0.5:8443');
   await userEvent.click(screen.getByRole('button', { name: 'Добавить' }));
   expect(input).toHaveValue('10.0.0.5:8443');
@@ -76,4 +76,17 @@ it('labels the registration submit in plain language', async () => {
   render(<Auth />);
   await userEvent.click(screen.getByRole('tab', { name: 'Регистрация' }));
   expect(screen.getByRole('button', { name: 'Создать аккаунт' })).toBeInTheDocument();
+});
+
+it('deletes a node from the chip and keeps adding reachable when the list empties', async () => {
+  useServers.setState({
+    nodes: [{ id: 'n1', host: '10.0.0.5:8080', name: 'alpha', owner: '', access: '', note: '', ping: null, status: 'offline' }],
+    activeId: 'n1',
+  });
+  render(<Auth />);
+  fireEvent.click(screen.getByRole('button', { name: 'Удалить узел alpha' }));
+  await waitFor(() => expect(useServers.getState().nodes).toHaveLength(0));
+  // Форма добавления была закрыта — после удаления последнего узла чип добавления обязан остаться.
+  expect(screen.getByRole('button', { name: '+ Добавить узел' })).toBeInTheDocument();
+  expect(screen.getByText(/Узлов пока нет/)).toBeInTheDocument();
 });

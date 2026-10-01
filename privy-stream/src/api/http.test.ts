@@ -11,10 +11,11 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => { server.resetHandlers(); localStorage.clear(); });
 afterAll(() => server.close());
 
-it('selects HTTP for private nodes and HTTPS for public nodes', () => {
+it('uses plain HTTP for schemeless nodes and keeps an explicit scheme', () => {
   expect(baseUrl('192.168.1.4:8443')).toBe('http://192.168.1.4:8443');
-  expect(baseUrl('node.example:8443')).toBe('https://node.example:8443');
+  expect(baseUrl('195.209.213.79:8080')).toBe('http://195.209.213.79:8080');
   expect(baseUrl('http://node.example/')).toBe('http://node.example');
+  expect(baseUrl('https://node.example/')).toBe('https://node.example');
 });
 
 it('maps login failure to a user-facing NodeError', async () => {

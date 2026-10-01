@@ -8,6 +8,7 @@ import { useSession } from '../store/session';
 import { useSettings } from '../store/settings';
 import {
   Button,
+  CloseIcon,
   cx,
   DateField,
   type DateParts,
@@ -308,7 +309,7 @@ function WebNode({ name, host, online }: { name: string; host: string; online: b
  * без узла регистрироваться негде.
  */
 function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
-  const { nodes, activeId, pick, add, connect, adding, error, clearError, checkActive } = useServers();
+  const { nodes, activeId, pick, add, remove, connect, adding, checking, error, clearError, checkActive } = useServers();
   const node = useActiveNodeOrNull();
   const [host, setHost] = useState('');
   // Узел, который сохранили, но handshake не прошёл: адрес остаётся в поле, кнопка становится «Повторить».
@@ -351,19 +352,29 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
     }
   }
 
+  function removeNode(id: string) {
+    // Удалили узел, ждущий «Повторить», — про него кнопка больше не имеет смысла.
+    if (savedOfflineId === id) setSavedOfflineId(null);
+    clearError();
+    void remove(id);
+  }
+
   return (
     <div className={s.nodePicker}>
       <span className="t-label">УЗЕЛ ПОДКЛЮЧЕНИЯ</span>
 
-      {empty ? (
+      {empty && (
         <p className={s.noNodes}>Узлов пока нет. Введи адрес узла, который тебе дали, — аккаунт создаётся на нём.</p>
-      ) : (
-        <div className={s.chips}>
-          {nodes.map((n) => {
-            const st = NODE_STATUS[nodeState(n, activeId, null)];
-            return (
+      )}
+      {/* Чипы рендерятся и при пустом списке: иначе, удалив последний узел при
+          закрытой форме, добавить новый было бы неоткуда. */}
+      <div className={s.chips}>
+        {nodes.map((n) => {
+          const st = NODE_STATUS[nodeState(n, activeId, null)];
+          return (
+            // Обёртка обязательна: кнопка удаления не может лежать внутри чипа-кнопки.
+            <div key={n.id} className={s.chipWrap}>
               <button
-                key={n.id}
                 type="button"
                 className={cx(s.chip, n.id === activeId && s.chipActive)}
                 onClick={() => {
@@ -376,29 +387,38 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
                 {/* Имя может совпадать у нескольких узлов — различаем их адресом. */}
                 {hostLabel(n.host) !== n.name && <span className={s.chipHost}>{hostLabel(n.host)}</span>}
               </button>
-            );
-          })}
-          {!open && (
-            <button
-              type="button"
-              className={cx(s.chip, s.chipAdd)}
-              onClick={() => {
-                clearError();
-                setOpen(true);
-              }}
-            >
-              + Добавить узел
-            </button>
-          )}
-        </div>
-      )}
+              <button
+                type="button"
+                className={s.chipRemove}
+                aria-label={`Удалить узел ${n.name}`}
+                title="Удалить узел"
+                onClick={() => removeNode(n.id)}
+              >
+                <CloseIcon size={9} />
+              </button>
+            </div>
+          );
+        })}
+        {!open && (
+          <button
+            type="button"
+            className={cx(s.chip, s.chipAdd)}
+            onClick={() => {
+              clearError();
+              setOpen(true);
+            }}
+          >
+            + Добавить узел
+          </button>
+        )}
+      </div>
 
       {/* Выбранный узел не отвечает: говорим прямо и даём перепроверить, не скрывая форму. */}
       {node && node.status !== 'online' && !open && (
         <div id="node-offline-note" className={s.nodeOffline}>
           <span>узел не отвечает — вход сейчас невозможен</span>
-          <Button variant="quiet" size="sm" onClick={() => void checkActive()}>
-            Проверить снова
+          <Button variant="quiet" size="sm" disabled={checking} onClick={() => void checkActive()}>
+            {checking ? 'Проверяю…' : 'Проверить снова'}
           </Button>
         </div>
       )}
@@ -411,7 +431,7 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
               className={s.addNodeInput}
               value={host}
               autoFocus
-              placeholder="10.0.0.5:8443"
+              placeholder="10.0.0.5:8080"
               onChange={(e) => {
                 setHost(e.target.value);
                 // Адрес меняют — «Повторить» про старый узел не имеет смысла.
@@ -451,8 +471,8 @@ function NodePicker({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
           // Причину показывает ErrorNote выше («… · адрес сохранён») —
           // здесь остаётся только подсказка про «Повторить», без дублирования текста.
           ? '«Повторить» проверит ещё раз · адрес можно поправить выше'
-          : open
-            ? 'адрес вида host:port · ключ и история остаются на стороне клиента'
+            : open
+            ? 'адрес вида host:port, у gateway обычно 8080 · без схемы — http, для TLS напиши https://'
             : node
               ? `${node.host} · аккаунт создаётся на выбранном узле`
               : 'добавь узел, чтобы войти или зарегистрироваться'}

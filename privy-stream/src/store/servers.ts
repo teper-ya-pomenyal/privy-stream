@@ -1,10 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { errorText, nodeApi, type NodeInfo } from '../api';
+import { secrets } from '../platform/secrets';
 import { nodesStorage } from '../platform/nodesStorage';
+import { useSession } from './session';
 
-/** host[:port], схема необязательна: без неё выбирается автоматически (см. api/http.ts). */
+/** host[:port], схема необязательна: без неё узел идёт по http (см. api/http.ts). */
 const HOST_RE = /^(https?:\/\/)?[\w.-]+(:\d+)?$/;
+
+/** Адрес без схемы и хвостовых косых — ключ сравнения: «http://x:8080» и «x:8080» один узел. */
+const withoutScheme = (host: string) => host.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 
 /** id демо-узлов из макета, которые до v1 клали в список при первом запуске. */
 const LEGACY_DEMO_IDS = new Set(['eu3', 'ru-ind', 'nl-vault', 'home']);
@@ -15,6 +20,8 @@ interface ServersState {
   /** id узла, к которому идёт подключение */
   connectingId: string | null;
   adding: boolean;
+  /** идёт перепроверка активного узла («Проверить снова» на экране входа) */
+  checking: boolean;
   error: string;
   /**
    * Выбор узла на экране входа — без handshake.
@@ -26,6 +33,8 @@ interface ServersState {
   connect: (id: string) => Promise<boolean>;
   /** Пробить узел и добавить в список. online: false — адрес сохранён, но узел не ответил. */
   add: (host: string) => Promise<{ id: string; online: boolean } | null>;
+  /** Удалить узел из списка: вместе с сессией и токенами, которые жили на нём. */
+  remove: (id: string) => Promise<void>;
   clearError: () => void;
   /** Веб-версия: единственный узел из config.json, сменить его нельзя. */
   initWeb: (node: { url: string; name: string }) => void;
@@ -43,6 +52,7 @@ export const useServers = create<ServersState>()(
       activeId: '',
       connectingId: null,
       adding: false,
+      checking: false,
       error: '',
 
       pick(id, opts) {
@@ -83,27 +93,41 @@ export const useServers = create<ServersState>()(
       },
 
       async add(raw) {
-        const host = raw.trim().replace(/\/+$/, '');
-        if (!HOST_RE.test(host)) {
-          set({ error: '400 · адрес вида host:port, например 10.0.0.5:8443 или https://node.example' });
+        const addr = raw.trim().replace(/\/+$/, '');
+        if (!HOST_RE.test(addr)) {
+          set({ error: '400 · адрес вида host:port, например 10.0.0.5:8080 или https://node.example' });
           return null;
         }
-        if (get().nodes.some((n) => n.host === host)) {
+        if (get().nodes.some((n) => withoutScheme(n.host) === withoutScheme(addr))) {
           set({ error: 'узел уже в списке' });
           return null;
         }
         set({ adding: true, error: '' });
-        const base = { id: `u${Date.now()}`, host };
+        const base = { id: `u${Date.now()}`, host: addr };
+        // Без схемы узел идёт по http; если там оказался только TLS — сохраняем
+        // адрес с явной https-схемой: молчаливо уводить узел в https нельзя,
+        // из-за этого активный узел вечно оставался offline.
         try {
-          const { descriptor, ping } = await nodeApi.probe(host);
+          const { descriptor, ping } = await nodeApi.probe(addr);
           const node: NodeInfo = { ...base, ...descriptor, ping, status: 'online' };
           set((s) => ({ nodes: [...s.nodes, node], adding: false }));
           return { id: base.id, online: true };
         } catch (e) {
+          if (!/^https?:\/\//.test(addr)) {
+            try {
+              const httpsHost = `https://${addr}`;
+              const { descriptor, ping } = await nodeApi.probe(httpsHost);
+              const node: NodeInfo = { ...base, host: httpsHost, ...descriptor, ping, status: 'online' };
+              set((s) => ({ nodes: [...s.nodes, node], adding: false }));
+              return { id: base.id, online: true };
+            } catch {
+              // Не ответил ни http, ни https — сохраняем адрес как ввели, причина ниже.
+            }
+          }
           // Узел всё равно добавляем — он может подняться позже.
           const node: NodeInfo = {
             ...base,
-            name: host.replace(/^https?:\/\//, '').split(':')[0],
+            name: addr.replace(/^https?:\/\//, '').split(':')[0],
             owner: 'добавлен тобой',
             access: 'неизвестно',
             note: 'узел добавлен вручную, метаданные ещё не получены',
@@ -120,6 +144,22 @@ export const useServers = create<ServersState>()(
         }
       },
 
+      async remove(id) {
+        const node = get().nodes.find((n) => n.id === id);
+        if (!node) return;
+        // Узел текущей сессии: сперва корректный выход — logout на узле и стирание
+        // токенов. Токены остальных узлов тоже не храним: ключ от удалённого замка выбрасывается.
+        if (useSession.getState().host === node.host) await useSession.getState().signOut();
+        await secrets.remove(node.host).catch(() => {});
+        set((s) => ({
+          nodes: s.nodes.filter((n) => n.id !== id),
+          // Активный узел не автоподменяем другим — выбор за пользователем (экран входа).
+          activeId: s.activeId === id ? '' : s.activeId,
+          connectingId: s.connectingId === id ? null : s.connectingId,
+          error: '',
+        }));
+      },
+
       clearError: () => set({ error: '' }),
 
       initWeb({ url, name }) {
@@ -128,16 +168,20 @@ export const useServers = create<ServersState>()(
       },
 
       async checkActive() {
-        const { nodes, activeId } = get();
+        const { nodes, activeId, checking } = get();
         const node = nodes.find((n) => n.id === activeId);
-        if (!node) return;
+        if (!node || checking) return;
         const update = (patch: Partial<NodeInfo>) =>
           set((s) => ({ nodes: s.nodes.map((n) => (n.id === node.id ? { ...n, ...patch } : n)) }));
+        set({ checking: true });
         try {
           const { ping } = await nodeApi.probe(node.host);
           update({ ping, status: 'online' });
-        } catch {
+          set({ checking: false, error: '' });
+        } catch (e) {
           update({ ping: null, status: 'offline' });
+          // Молчаливый провал выглядел как сломанная кнопка — показываем причину.
+          set({ checking: false, error: `${errorText(e)} · проверь порт и схему адреса узла` });
         }
       },
     }),

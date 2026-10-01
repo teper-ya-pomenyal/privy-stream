@@ -54,16 +54,16 @@ const PROBE_TIMEOUT_MS = 5000;
 
 // ---------- Адрес узла ----------
 
-const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|[^.]+\.local(:|$))/;
-
 /**
- * baseURL узла. Схему можно указать явно (https://…). Без неё локальные и
- * приватные адреса идут по http (gateway в docker-compose слушает plain HTTP),
- * остальные — только по https, чтобы пароль не уходил в сеть открытым текстом.
+ * baseURL узла. Схему можно указать явно (https://…). Без неё узел всегда идёт
+ * по http: gateway в docker-compose слушает plain HTTP, а молчаливый https для
+ * «публичных» адресов давал вечный offline там, где curl по http проходил
+ * (https-only узел добавляется с явной схемой — форма добавления пробует
+ * https сама и сохраняет адрес с ней, см. store/servers.ts).
  */
 export function baseUrl(host: string): string {
   if (/^https?:\/\//.test(host)) return host.replace(/\/+$/, '');
-  return `${PRIVATE_HOST.test(host) ? 'http' : 'https'}://${host}`;
+  return `http://${host}`;
 }
 
 // ---------- Ошибки ----------

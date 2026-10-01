@@ -4,6 +4,8 @@ vi.mock('../api', () => ({
   browseApi: () => async () => [],
   nodeApi: { search: vi.fn(async () => ({ artists: [], tracks: [] })) },
   errorText: (e: unknown) => (e instanceof Error ? e.message : String(e)),
+  // Стор узлов тянет session.ts, а тот зовёт её на верхнем уровне.
+  setAuthExpiredHandler: vi.fn(),
 }));
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
