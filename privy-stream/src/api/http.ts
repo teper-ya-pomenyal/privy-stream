@@ -311,20 +311,25 @@ export const httpNodeApi: NodeApi = {
   },
 
   async stream(host, trackId) {
-    // Проба первым байтом: <audio> не читает статусы ответа, а 403 (18+) и 404
-    // надо показать внятно. ServeContent отвечает 206 на один байт, CORS узла
-    // уже разрешает заголовок Range.
-    await authed(host, `/stream/${id(trackId)}`, {
-      403: 'трек 18+ заблокирован для твоего аккаунта',
-      404: 'трек не найден на узле',
-      500: 'узел не смог отдать файл трека',
-    }, 'GET', { Range: 'bytes=0-0' });
-    // <audio src> заголовки не отправляет — авторизация стрима по короткоживущему
-    // токену в query: файл браузер тянет сам по Range-запросам по мере игры.
+    // Стрим-токен: <audio src> заголовки не шлёт — авторизация короткоживущим
+    // токеном в query (TTL ~10 минут).
     const res = await authed(host, '/stream/token', {}, 'POST');
     const { stream_token: token } = (await res.json().catch(() => ({}))) as { stream_token?: string };
     if (!token) throw new NodeError(502, 'узел не выдал стрим-токен');
-    return `${baseUrl(host)}/stream/${id(trackId)}?access_token=${encodeURIComponent(token)}`;
+
+    // Проба первым байтом с тем же токеном: <audio> не читает статусы ответа,
+    // а 403 (18+) и 404 надо показать внятно. send, не authed: /stream/{id}
+    // не принимает заголовок авторизации, а 401 не должен запускать refresh.
+    const path = `/stream/${id(trackId)}?access_token=${encodeURIComponent(token)}`;
+    const probe = await send(host, path, { headers: { Range: 'bytes=0-0' } });
+    if (probe.body) await probe.body.cancel().catch(() => {});
+    if (!probe.ok) {
+      if (probe.status === 403) throw new NodeError(403, 'трек 18+ заблокирован для твоего аккаунта');
+      if (probe.status === 404) throw new NodeError(404, 'трек не найден на узле');
+      if (probe.status === 401) throw new NodeError(401, 'узел не принял стрим-токен, попробуй ещё раз');
+      throw new NodeError(502, 'узел не смог отдать файл трека');
+    }
+    return `${baseUrl(host)}${path}`;
   },
 
   async coverUrl(host, releaseId) {
