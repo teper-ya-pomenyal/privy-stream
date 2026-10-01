@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import type { NodeInfo, Track } from '../api';
 import { useCoverUrl } from '../api/queries';
 import { fmtTime, trackNum } from '../lib/format';
-import { useCurrentTrack } from '../store/player';
+import { useCurrentTrack, usePlayer } from '../store/player';
 import { useSettings } from '../store/settings';
 import type { FavControl } from '../store/favorites';
 import s from './ui.module.css';
@@ -556,6 +556,10 @@ export function TrackTable({
   fav?: FavControl;
 }) {
   const current = useCurrentTrack();
+  const isPlaying = usePlayer((s) => s.playing);
+
+  /** Клик по строке: другой трек — играть с начала, текущий — пауза/продолжить. */
+  const playRow = (t: Track, isCurrent: boolean) => (isCurrent ? usePlayer.getState().toggle() : onPlay(t));
   const cols = fav
     ? variant === 'library'
       ? s.colsLibraryFav
@@ -588,7 +592,7 @@ export function TrackTable({
         const playing = current?.id === t.id;
         return (
           /* Клик по строке — удобство мыши; путь клавиатуры и диктора — кнопка названия ниже */
-          <div key={t.id} className={cx(s.trackRow, cols, playing && s.playing)} onClick={() => onPlay(t)}>
+          <div key={t.id} className={cx(s.trackRow, cols, playing && s.playing)} onClick={() => playRow(t, playing)}>
             {/* Подсветка играющего трека переезжает к новой строке (Motion layoutId):
                 видно, что именно заиграло после клика или переключения. */}
             {playing && (
@@ -601,12 +605,12 @@ export function TrackTable({
                 <>
                   <span className={s.tNum}>{trackNum(i)}</span>
                   <span className={cx(s.tPlay, playing && s.tPlayShown)} aria-hidden="true">
-                    {playing ? <PauseIcon size={12} /> : <PlayIcon size={12} />}
+                    {playing && isPlaying ? <PauseIcon size={12} /> : <PlayIcon size={12} />}
                   </span>
                 </>
               ) : (
                 <span className={cx(s.tPlay, s.tPlayAlways, playing && s.tPlayShown)} aria-hidden="true">
-                  {playing ? <PauseIcon size={12} /> : <PlayIcon size={12} />}
+                  {playing && isPlaying ? <PauseIcon size={12} /> : <PlayIcon size={12} />}
                 </span>
               )}
             </span>
@@ -615,9 +619,9 @@ export function TrackTable({
               className={cx(s.tTitleBtn, variant !== 'popular' && s.tTitleCell)}
               onClick={(e) => {
                 e.stopPropagation();
-                onPlay(t);
+                playRow(t, playing);
               }}
-              aria-label={`Играть «${t.title}»`}
+              aria-label={playing && isPlaying ? `Пауза «${t.title}»` : `Играть «${t.title}»`}
             >
               {variant === 'release' ? (
                 <>
