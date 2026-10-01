@@ -5,7 +5,7 @@ import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
 import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, TextLink } from '../ui';
-import { RepeatControl, SeekBar, VolumeControl } from './PlayerBar';
+import { RepeatControl, SeekBar, ShuffleControl, VolumeControl } from './PlayerBar';
 import s from './layout.module.css';
 
 /**
@@ -87,20 +87,23 @@ function FullPlayerBody() {
             </div>
           </div>
 
-          {/* Ряд «назад · повтор · play · мьют · дальше»: повтор зеркален мьюту
-              по размеру и позиции, play между ними, «назад/дальше» — по краям. */}
+          {/* Ряд как в привычных плеерах: слева кластер «перемешать · назад · play ·
+              дальше · повтор», громкость — отдельно у правого края, её полоса — поповер. */}
           <div className={s.fullTransport}>
-            <button type="button" className={s.iconBtn} onClick={prev} aria-label="Предыдущий">
-              <PrevIcon size={18} />
-            </button>
-            <RepeatControl className={s.repBtn} />
-            <button type="button" className={s.fullPlay} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
-              {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
-            </button>
+            <div className={s.transportCluster}>
+              <ShuffleControl className={s.repBtn} />
+              <button type="button" className={s.iconBtn} onClick={prev} aria-label="Предыдущий">
+                <PrevIcon size={18} />
+              </button>
+              <button type="button" className={s.fullPlay} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
+                {playing ? <PauseIcon size={24} /> : <PlayIcon size={24} />}
+              </button>
+              <button type="button" className={s.iconBtn} onClick={next} aria-label="Следующий">
+                <NextIcon size={18} />
+              </button>
+              <RepeatControl className={s.repBtn} />
+            </div>
             <VolumeControl />
-            <button type="button" className={s.iconBtn} onClick={next} aria-label="Следующий">
-              <NextIcon size={18} />
-            </button>
           </div>
         </div>
 

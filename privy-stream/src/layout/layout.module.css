@@ -240,19 +240,11 @@
   min-width: 0;
 }
 .transport {
-  /* Крайние колонки равны — «назад/повтор» и «дальше» расходятся от центра, play не сдвигается */
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 18px;
-}
-.transportSide {
+  /* Кластер как в развёрнутом плеере: ⇄ ⏮ ▶ ⏭ ↻ одним рядом по центру колонки */
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 18px;
-}
-.transportLeft {
-  justify-content: flex-end;
 }
 .skip {
   display: inline-flex;
@@ -352,9 +344,46 @@
 
 /* ---------- Volume ---------- */
 .volume {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
+}
+/* Поповер с полосой-регулятором: раскрывается над кнопкой, пока курсор или
+   фокус на громкости. Открытие и задержка закрытия — в VolumeControl (data-open):
+   после ухода курсора поповер держится ещё 400 мс, чтобы курсор успел дойти до
+   полосы. Прижат правым краем к кнопке, чтобы не вылезать за правый край окна
+   у обоих плееров. Невидим через opacity, а не display — досягаем с клавиатуры. */
+.volumePop {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: -10px;
+  display: flex;
+  align-items: center;
+  padding: 13px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow-pop);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+/* Невидимый мост через зазор между кнопкой и поповером: курсор не «проваливается» */
+.volumePop::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+.volume[data-open] .volumePop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 .volBtn {
   display: flex;
@@ -534,18 +563,17 @@
   font-variant-numeric: tabular-nums;
 }
 .fullTransport {
-  /* Ряд «назад · повтор · play · мьют · дальше»: крайние колонки равны —
-     «назад» и «дальше» уходят на края, центр сидит между повтором и «без звука» */
-  display: grid;
-  grid-template-columns: 1fr auto auto auto 1fr;
+  /* Слева кластер «перемешать · назад · play · дальше · повтор», справа —
+     громкость одной кнопкой: полоса-регулятор спрятана в поповер */
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
 }
-.fullTransport > :nth-child(1) {
-  justify-self: start;
-}
-.fullTransport > :nth-child(5) {
-  justify-self: end;
+.transportCluster {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 /* Повтор и «без звука» — зеркальные боксы вокруг play, размером с «назад/дальше» */
 .repBtn,
@@ -855,9 +883,14 @@
     font-size: 32px;
   }
   .fullTransport {
-    /* Ряд «назад · повтор · play · мьют · дальше» — тот же грид, что на десктопе;
-       полоса громкости скрыта, поэтому повтор и мьют равны и play строго в центре */
+    /* Кластер с перемешиванием шире прежнего ряда — на узких экранах позволяем
+       громкости перенестись второй строкой, а зазор в кластере сжимаем */
+    flex-wrap: wrap;
+    row-gap: 10px;
     gap: 10px;
+  }
+  .transportCluster {
+    gap: 8px;
   }
   .fullTransport .repBtn,
   .fullTransport .volBtn {
@@ -873,6 +906,11 @@
   }
   /* iOS не даёт менять громкость из JS — остаётся только «без звука» */
   .volBar {
+    display: none;
+  }
+  /* Поповер без полосы внутри — пустая панель: тап по кнопке даёт ей фокус
+     и открывал бы её. Прячем совсем: громкость на телефоне — только мьют. */
+  .volumePop {
     display: none;
   }
   .queue {

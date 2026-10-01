@@ -1,8 +1,8 @@
-import { useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import type { Track } from '../api';
 import { fmtTime } from '../lib/format';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
-import { CoverThumb, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, RepeatOneIcon } from '../ui';
+import { CoverThumb, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, RepeatOneIcon, ShuffleIcon } from '../ui';
 import s from './layout.module.css';
 
 /** Доля ширины элемента под курсором — для seek по полосе/волне. */
@@ -96,22 +96,19 @@ export function PlayerBar() {
       </button>
 
       <div className={s.center}>
-        {/* Боковые колонки грида равны — play остаётся ровно по центру, повтор слева от него */}
+        {/* Тот же порядок кнопок, что в развёрнутом плеере: ⇄ ⏮ ▶ ⏭ ↻ */}
         <div className={s.transport}>
-          <div className={cx(s.transportSide, s.transportLeft)}>
-            <button type="button" className={s.skip} onClick={prev} aria-label="Предыдущий">
-              <PrevIcon />
-            </button>
-            <RepeatControl className={s.skip} />
-          </div>
+          <ShuffleControl className={s.skip} />
+          <button type="button" className={s.skip} onClick={prev} aria-label="Предыдущий">
+            <PrevIcon />
+          </button>
           <button type="button" className={s.playBtn} onClick={toggle} aria-label={playing ? 'Пауза' : 'Играть'}>
             {playing ? <PauseIcon size={17} /> : <PlayIcon size={17} />}
           </button>
-          <div className={s.transportSide}>
-            <button type="button" className={s.skip} onClick={next} aria-label="Следующий">
-              <NextIcon />
-            </button>
-          </div>
+          <button type="button" className={s.skip} onClick={next} aria-label="Следующий">
+            <NextIcon />
+          </button>
+          <RepeatControl className={s.skip} />
         </div>
         <div className={s.progressRow}>
           <span className={s.time}>{fmtTime(position)}</span>
@@ -134,10 +131,10 @@ export function PlayerBar() {
 /**
  * Кнопка режима повтора: выключен → вся очередь → текущий трек.
  * Вид берётся из переданного класса: в нижнем баре — как «назад/дальше»,
- * в полном плеере — бокс размером с кнопку «без звука» (зеркало слева от play).
+ * в полном плеере — бокс размером с кнопку «без звука».
  */
 export function RepeatControl({ className }: { className?: string }) {
-  // Точечный селектор: кнопка не должна перерисовываться на каждом тике позиции.
+  // Точечные селекторы: кнопка не должна перерисовываться на каждом тике позиции.
   const repeat = usePlayer((p) => p.repeat);
   const cycleRepeat = usePlayer((p) => p.cycleRepeat);
   const label = repeat === 'off' ? 'Повтор выключен' : repeat === 'all' ? 'Повтор очереди' : 'Повтор трека';
@@ -148,9 +145,34 @@ export function RepeatControl({ className }: { className?: string }) {
   );
 }
 
+/** Кнопка перемешивания: «дальше» и конец трека идут по случайному порядку очереди. */
+export function ShuffleControl({ className }: { className?: string }) {
+  const shuffle = usePlayer((p) => p.shuffle);
+  const toggleShuffle = usePlayer((p) => p.toggleShuffle);
+  const label = shuffle ? 'Перемешивание включено' : 'Перемешивание выключено';
+  return (
+    <button
+      type="button"
+      className={cx(className, shuffle && s.repActive)}
+      onClick={toggleShuffle}
+      aria-label={label}
+      aria-pressed={shuffle}
+      title={label}
+    >
+      <ShuffleIcon size={18} />
+    </button>
+  );
+}
+
+/** Сколько поповер громкости ждёт после ухода курсора, прежде чем скрыться. */
+const VOLUME_HIDE_DELAY_MS = 400;
+
 /**
- * Громкость: кнопка «без звука» и полоса-регулятор (тянуть, клик, стрелки, колесо).
- * На телефоне полоса скрыта CSS — в iOS громкость меняется только кнопками устройства.
+ * Громкость: кнопка «без звука», полоса-регулятор живёт в поповере. Поповер
+ * раскрывается при наведении или фокусе и не гаснет мгновенно: после ухода
+ * курсора держится VOLUME_HIDE_DELAY_MS — курсор успевает дойти от кнопки до
+ * полосы (невидимый «мост» в CSS докрывает зазор между ними). На телефоне
+ * полоса скрыта CSS — в iOS громкость меняется только кнопками устройства.
  */
 export function VolumeControl() {
   // Точечные селекторы: весь стор меняется на каждом тике позиции.
@@ -159,6 +181,19 @@ export function VolumeControl() {
   const setVolume = usePlayer((p) => p.setVolume);
   const toggleMute = usePlayer((p) => p.toggleMute);
   const level = muted ? 0 : volume;
+  // Открытие/закрытие — состоянием, а не :hover: hover умирает в зазоре между
+  // кнопкой и поповером, из-за чего регулятором было не воспользоваться.
+  const [open, setOpen] = useState(false);
+  const hideTimer = useRef<number | undefined>(undefined);
+  const show = () => {
+    window.clearTimeout(hideTimer.current);
+    setOpen(true);
+  };
+  const hideSoon = () => {
+    window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setOpen(false), VOLUME_HIDE_DELAY_MS);
+  };
+  useEffect(() => () => window.clearTimeout(hideTimer.current), []);
 
   const drag = (e: PointerEvent<HTMLDivElement>) => {
     if (e.buttons !== 1) return;
@@ -173,7 +208,31 @@ export function VolumeControl() {
   };
 
   return (
-    <div className={s.volume}>
+    // onFocus/onBlur в React всплывают: фокус с клавиатуры на полосе тоже держит поповер.
+    <div className={s.volume} data-open={open || undefined} onMouseEnter={show} onMouseLeave={hideSoon} onFocus={show} onBlur={hideSoon}>
+      {/* Поповер над кнопкой: из дерева доступности не исчезает (opacity, не display). */}
+      <div className={s.volumePop}>
+        <div
+          className={s.volBar}
+          role="slider"
+          tabIndex={0}
+          aria-label="Громкость"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(level * 100)}
+          onPointerDown={(e) => {
+            // Зажатие полосы держит поповер открытым, даже если курсор при тяге уходит.
+            show();
+            drag(e);
+          }}
+          onPointerMove={drag}
+          onKeyDown={onKey}
+          onWheel={(e) => setVolume(level - Math.sign(e.deltaY) * 0.05)}
+        >
+          <div className={s.volFill} style={{ width: `${level * 100}%` }} />
+          {level > 0 && <div className={s.volThumb} style={{ left: `${level * 100}%` }} />}
+        </div>
+      </div>
       <button type="button" className={s.volBtn} onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 9h4l5-4v14l-5-4H4z" />
@@ -187,22 +246,6 @@ export function VolumeControl() {
           )}
         </svg>
       </button>
-      <div
-        className={s.volBar}
-        role="slider"
-        tabIndex={0}
-        aria-label="Громкость"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(level * 100)}
-        onPointerDown={drag}
-        onPointerMove={drag}
-        onKeyDown={onKey}
-        onWheel={(e) => setVolume(level - Math.sign(e.deltaY) * 0.05)}
-      >
-        <div className={s.volFill} style={{ width: `${level * 100}%` }} />
-        {level > 0 && <div className={s.volThumb} style={{ left: `${level * 100}%` }} />}
-      </div>
     </div>
   );
 }
