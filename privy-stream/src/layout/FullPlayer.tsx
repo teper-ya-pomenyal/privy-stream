@@ -83,11 +83,11 @@ function FullPlayerBody() {
           <div className={s.waveWrap}>
             <SeekBar className={s.fullSeek} fillClassName={s.fullSeekFill} thumbClassName={s.fullSeekThumb} position={position} duration={duration} disabled={!duration} onSeek={seek} />
             <div className={s.waveMeta}>
-              <span>{fmtTime(position)}</span>
-              <span style={{ color: error ? 'var(--accent-text)' : 'var(--text-5)' }}>
+              <span className={s.waveTime}>{fmtTime(position)}</span>
+              <span className={s.waveSrc} title={error || undefined} style={error ? { color: 'var(--accent-text)' } : undefined}>
                 {error || (track.format ? `${track.format} · поток с узла` : track.host ? 'поток с узла' : 'локальный трек')}
               </span>
-              <span>{fmtTime(duration)}</span>
+              <span className={s.waveTime}>{fmtTime(duration)}</span>
             </div>
           </div>
 
