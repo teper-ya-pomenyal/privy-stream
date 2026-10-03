@@ -9,6 +9,7 @@ import {
 } from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
 import { shareOrCopy } from '../lib/share';
+import { shouldClose } from '../lib/sheetClose';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
@@ -17,10 +18,6 @@ import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, Sha
 import { RepeatControl, SeekBar, ShuffleControl, VolumeControl } from './PlayerBar';
 import { sheetGesture } from './sheetGesture';
 import s from './layout.module.css';
-
-/** Тяга ниже четверти экрана или рывок быстрее 500 px/s закрывают шторку. */
-const CLOSE_DISTANCE_FRACTION = 0.25;
-const CLOSE_FLING_V_PXS = 500;
 
 /**
  * Полноэкранный плеер-шторка: открывается снизу и так же уезжает обратно
@@ -62,7 +59,7 @@ export function FullPlayer({ sheetY: externalY }: { sheetY?: MotionValue<string 
   // Отпустили далеко вниз или резко дёрнули — закрываем; иначе Motion
   // сам вернёт шторку пружиной к открытому состоянию (dragConstraints).
   const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.y > window.innerHeight * CLOSE_DISTANCE_FRACTION || info.velocity.y > CLOSE_FLING_V_PXS) {
+    if (shouldClose(info, window.innerHeight)) {
       setClosing(true);
       setFullscreen(false);
     }
