@@ -444,6 +444,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 26px;
+  position: relative;
+}
+/* Ручка шторки — видна только на мобильном (см. @media ниже):
+   подсказка, что плеер открывается и закрывается тягой */
+.grabber {
+  display: none;
 }
 .fullBarLabel {
   font: 600 11px/1 var(--font-mono);
@@ -743,6 +749,11 @@
   gap: 12px;
   padding: 10px 14px;
   background: var(--bg-player);
+  /* Тяга мини-плеера вверх открывает шторку: вертикальный жест здесь не должен
+     скроллить страницу, а текст — выделяться под пальцем */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 /* Полоска таймлайна мини-плеера: линия 2px, но зона захвата выше и ниже неё,
    чтобы попадать пальцем. Тап и перетаскивание — перемотка трека. */
@@ -891,7 +902,21 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   .fullBar {
+    position: relative;
     padding: 0 16px;
+    /* Верхняя панель — ручка шторки: тяга вниз закрывает плеер */
+    touch-action: none;
+  }
+  .grabber {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38px;
+    height: 4px;
+    transform: translate(-50%, -50%);
+    border-radius: 2px;
+    background: var(--line-ctrl);
   }
   .fullBody {
     display: block;

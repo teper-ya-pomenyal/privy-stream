@@ -1,23 +1,46 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  motion,
+  useDragControls,
+  useMotionValue,
+  useReducedMotion,
+  type MotionValue,
+  type PanInfo,
+} from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
 import { shareOrCopy } from '../lib/share';
+import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { useActiveNode } from '../store/servers';
 import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, ShareIcon, TextLink } from '../ui';
 import { RepeatControl, SeekBar, ShuffleControl, VolumeControl } from './PlayerBar';
+import { sheetGesture } from './sheetGesture';
 import s from './layout.module.css';
+
+/** Тяга ниже четверти экрана или рывок быстрее 500 px/s закрывают шторку. */
+const CLOSE_DISTANCE_FRACTION = 0.25;
+const CLOSE_FLING_V_PXS = 500;
 
 /**
  * Полноэкранный плеер-шторка: открывается снизу и так же уезжает обратно
  * (AnimatePresence в AppShell держит его в дереве на время выезда).
+ * Позиция — внешний MotionValue: на мобильном мини-плеер ведёт её пальцем
+ * при открытии, а саму шторку можно закрыть, потянув вниз за верхнюю панель.
  * При reduced motion — мгновенно, без трансформа.
  */
-export function FullPlayer() {
+export function FullPlayer({ sheetY: externalY }: { sheetY?: MotionValue<string | number> } = {}) {
   const track = useCurrentTrack();
   const setFullscreen = usePlayer((p) => p.setFullscreen);
+  const open = usePlayer((p) => p.fullscreen);
   const reducedMotion = useReducedMotion();
+  const mobile = useMobile();
+  const fallbackY = useMotionValue<string | number>('100%');
+  const sheetY = externalY ?? fallbackY;
+  const dragControls = useDragControls();
+  // Флаг гасится на время выезда: drag не должен перехватывать y у exit-анимации,
+  // иначе AnimatePresence не дождётся её конца и шторка-призрак останется в DOM.
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setFullscreen(false);
@@ -25,23 +48,50 @@ export function FullPlayer() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setFullscreen]);
 
+  useEffect(() => {
+    if (open) setClosing(false);
+  }, [open]);
+
+  // Шторку смонтировали прямо под пальцем (тянут из мини-плеера): стартовую
+  // анимацию к нулю гасим — позицией уже управляет жест. Флаг разовый.
+  useLayoutEffect(() => {
+    if (sheetGesture.dragging) sheetY.stop();
+    sheetGesture.dragging = false;
+  }, [sheetY]);
+
+  // Отпустили далеко вниз или резко дёрнули — закрываем; иначе Motion
+  // сам вернёт шторку пружиной к открытому состоянию (dragConstraints).
+  const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.y > window.innerHeight * CLOSE_DISTANCE_FRACTION || info.velocity.y > CLOSE_FLING_V_PXS) {
+      setClosing(true);
+      setFullscreen(false);
+    }
+  };
+
   if (!track) return null;
-  if (reducedMotion) return <div className={s.full}><FullPlayerBody /></div>;
+  if (reducedMotion) return <div className={s.full}><FullPlayerBody dragControls={dragControls} sheetY={sheetY} /></div>;
 
   return (
     <motion.div
       className={s.full}
-      initial={{ y: '100%' }}
+      style={{ y: sheetY }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+      drag={mobile && !closing ? 'y' : false}
+      dragListener={false}
+      dragControls={dragControls}
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={{ top: 0, bottom: 1 }}
+      dragMomentum={false}
+      onDragEnd={mobile && !closing ? onDragEnd : undefined}
     >
-      <FullPlayerBody />
+      <FullPlayerBody dragControls={dragControls} sheetY={sheetY} />
     </motion.div>
   );
 }
 
-function FullPlayerBody() {
+function FullPlayerBody({ dragControls, sheetY }: { dragControls: ReturnType<typeof useDragControls>; sheetY: MotionValue<string | number> }) {
   const track = useCurrentTrack();
   const node = useActiveNode();
   const { queue, index, playing, position, error, toggle, next, prev, seek, play, setFullscreen } = usePlayer();
@@ -49,10 +99,21 @@ function FullPlayerBody() {
   // Внешний компонент рендерит тело только при наличии трека, но свой guard нужен TS.
   if (!track) return null;
 
+  // Ручка шторки — верхняя панель: тяга вниз закрывает плеер. Кнопка «Свернуть»
+  // остаётся обычным тапом, содержимое ниже не участвует — там скроллится очередь.
+  const startCloseDrag = (e: ReactPointerEvent) => {
+    if ((e.target as HTMLElement).closest('button, a')) return;
+    // Палец перехватывает позицию у доигрывающей анимации открытия: без остановки
+    // Motion не начинает drag на анимируемом элементе и тяга молчаливо теряется.
+    sheetY.stop();
+    dragControls.start(e);
+  };
+
   return (
     <>
-      <div className={s.fullBar}>
+      <div className={s.fullBar} onPointerDown={startCloseDrag}>
         <div className={s.fullBarLabel}>СЕЙЧАС ИГРАЕТ</div>
+        <span className={s.grabber} aria-hidden="true" />
         <TextLink onClick={() => setFullscreen(false)}>Свернуть</TextLink>
       </div>
 

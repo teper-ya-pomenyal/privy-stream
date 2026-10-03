@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { animate, useMotionValue, useReducedMotion, type MotionValue } from 'motion/react';
 import type { Track } from '../api';
 import { fmtTime } from '../lib/format';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
 import { CoverThumb, cx, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, RepeatOneIcon, ShuffleIcon } from '../ui';
+import { sheetGesture } from './sheetGesture';
 import s from './layout.module.css';
 
 /** Доля ширины элемента под курсором — для seek по полосе/волне. */
@@ -250,14 +252,117 @@ export function VolumeControl() {
   );
 }
 
-/** Мобильный мини-плеер над таб-баром: тап по треку раскрывает полноэкранный плеер. */
-export function MiniPlayer() {
+/** Насколько (px) надо потянуть мини-плеер вверх, чтобы жест стал открытием шторки. */
+const DRAG_OPEN_START_PX = 8;
+/** Доля высоты экрана: дожал тягу на четверть экрана вверх — шторка открывается. */
+const OPEN_DISTANCE_FRACTION = 0.25;
+/** Скорость рывка вверх (px/мс), при которой шторка открывается из любого положения. */
+const OPEN_FLING_V_PXMS = 0.5;
+
+/** Скорость последнего рывка по выборке точек жеста: вниз — плюс, вверх — минус.
+ *  Берутся точки последней сотни миллисекунд; интервал короче 8 мс (дубликаты
+ *  событий) или палец, замерший перед отпусканием, рывком не считается. */
+export const flingVelocity = (samples: Array<{ t: number; y: number }>) => {
+  const last = samples[samples.length - 1];
+  const windowStart = last.t - 100;
+  let first = last;
+  for (const p of samples) {
+    if (p.t >= windowStart) {
+      first = p;
+      break;
+    }
+  }
+  const dt = last.t - first.t;
+  return dt >= 8 ? (last.y - first.y) / dt : 0;
+};
+
+/**
+ * Мобильный мини-плеер над таб-баром. Тап по треку открывает полноэкранную
+ * шторку, а тяга вверх открывает её «в руке»: шторка следует за пальцем,
+ * дожал четверть экрана или рванул вверх — открылась, отпустил раньше — уехала
+ * обратно вниз.
+ */
+export function MiniPlayer({ sheetY: externalY }: { sheetY?: MotionValue<string | number> } = {}) {
   const track = useCurrentTrack();
   const { playing, position, loading, error, toggle, seek, setFullscreen } = usePlayer();
   const duration = useDuration();
   const pct = duration ? Math.min(100, (position / duration) * 100) : 0;
   // Скраббинг по полоске таймлайна: тап и перетаскивание переставляют позицию.
   const [scrubbing, setScrubbing] = useState(false);
+  // Позиция шторки — общий с FullPlayer MotionValue: жест ведёт её до монтирования.
+  const fallbackY = useMotionValue<string | number>('100%');
+  const sheetY = externalY ?? fallbackY;
+  const reducedMotion = useReducedMotion();
+  const gesture = useRef<{ startY: number; open: boolean; samples: Array<{ t: number; y: number }> } | null>(null);
+  // Тяга съела тап: отпускание после жеста не должно снова открывать шторку кликом.
+  const suppressClick = useRef(false);
+
+  const openGesture = (dy: number) => {
+    // Шторка встаёт под палец ещё до монтирования и открывается без анимации.
+    sheetGesture.dragging = true;
+    suppressClick.current = true;
+    sheetY.jump(Math.max(0, window.innerHeight + dy));
+    setFullscreen(true);
+  };
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.isPrimary === false || e.button !== 0 || reducedMotion || !track) return;
+    // Play и полоска перемотки работают как раньше; остальная площадь мини-плеера
+    // (обложка, название, фон) — ручка шторки.
+    if ((e.target as HTMLElement).closest(`[role="slider"], .${s.miniPlay}`)) return;
+    suppressClick.current = false;
+    gesture.current = { startY: e.clientY, open: false, samples: [{ t: e.timeStamp, y: e.clientY }] };
+    // Захват указателя: шторка наедет на палец, а события продолжат приходить сюда.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // pointerdown без активного указателя (синтетическое событие, jsdom)
+    }
+  };
+
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g) return;
+    const dy = e.clientY - g.startY;
+    if (!g.open) {
+      // Пока тяга меньше порога — это ещё возможный тап, шторку не трогаем.
+      if (dy > -DRAG_OPEN_START_PX) return;
+      openGesture(dy);
+      g.open = true;
+    } else {
+      // Медленно тянет — шторка медленно открывается: один к одному за пальцем.
+      sheetY.jump(Math.max(0, window.innerHeight + dy));
+    }
+    g.samples.push({ t: e.timeStamp, y: e.clientY });
+  };
+
+  const onGestureEnd = (e: PointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g?.open) return;
+    sheetGesture.dragging = false;
+    // Точка отпускания — в выборку: без неё долгая пауза перед отпусканием
+    // считалась бы рывком по устаревшим точкам.
+    g.samples.push({ t: e.timeStamp, y: e.clientY });
+    const pulled = g.startY - e.clientY > window.innerHeight * OPEN_DISTANCE_FRACTION;
+    if (pulled || flingVelocity(g.samples) < -OPEN_FLING_V_PXMS) {
+      void animate(sheetY, 0, { duration: 0.4, ease: [0.32, 0.72, 0, 1] });
+    } else {
+      // Не дожал: шторка уезжает вниз с того места, где её отпустили (exit).
+      setFullscreen(false);
+    }
+  };
+
+  // Клик доезжает до корня только когда указатель был захвачен (правило общего
+  // предка): тап по кнопке «сейчас играет» там уже отработал своим onClick.
+  const onRootClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
+    if (track) setFullscreen(true);
+  };
 
   const startScrub = (e: PointerEvent<HTMLDivElement>) => {
     if (!track || !duration) return;
@@ -275,7 +380,14 @@ export function MiniPlayer() {
   };
 
   return (
-    <div className={s.mini}>
+    <div
+      className={s.mini}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onGestureEnd}
+      onPointerCancel={onGestureEnd}
+      onClick={onRootClick}
+    >
       {/* Полоска таймлайна — перемотка; остальная площадь мини-плеера открывает плеер */}
       <div
         className={s.miniSeek}

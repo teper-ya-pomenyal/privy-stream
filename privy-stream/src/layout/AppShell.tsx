@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useMotionValue, useReducedMotion } from 'motion/react';
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
@@ -25,6 +25,9 @@ export function AppShell() {
   const outlet = useOutlet();
   const reducedMotion = useReducedMotion();
   const contentRef = useRef<HTMLElement>(null);
+  // Позиция шторки полного плеера: 0 — открыт, '100%' — закрыт. Общая для
+  // мини-плеера и шторки: на мобильном её можно тянуть пальцем в обе стороны.
+  const sheetY = useMotionValue<string | number>('100%');
 
   useEffect(() => startListenReporter(), []);
 
@@ -67,14 +70,14 @@ export function AppShell() {
       </div>
       {mobile ? (
         <div className={s.mobileFoot}>
-          <MiniPlayer />
+          <MiniPlayer sheetY={sheetY} />
           <TabBar />
         </div>
       ) : (
         <PlayerBar />
       )}
       {/* AnimatePresence играет выезд шторки плеера при закрытии */}
-      <AnimatePresence>{fullscreen && <FullPlayer />}</AnimatePresence>
+      <AnimatePresence>{fullscreen && <FullPlayer sheetY={sheetY} />}</AnimatePresence>
       <AudioEngine />
     </div>
   );
