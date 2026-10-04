@@ -5,7 +5,7 @@ import { shouldClose } from '../lib/sheetClose';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
 import { useShareSheet } from '../store/shareSheet';
-import { useActiveNode } from '../store/servers';
+import { useActiveNode, useServers } from '../store/servers';
 import { ArtistAvatar, Button, CloseIcon, CoverThumb, NodeCover, ShareIcon, cx, hostLabel } from './index';
 import s from './ui.module.css';
 
@@ -73,11 +73,15 @@ function ShareSheetBody({ target, close }: { target: ShareTarget; close: () => v
     if (shouldClose(info, window.innerHeight)) close();
   };
 
-  // Шерим по узлу сущности, а не сессии: трек/релиз из мультинодового поиска
-  // делятся своим узлом (описание, превью, строка «Узел»), артист и локальные —
-  // активным. Один расчёт до контента — обе ветки шторки согласованы.
-  const targetHost = target.kind === 'track' ? target.track.host : target.kind === 'release' ? target.release.host : undefined;
+  // Шерим по узлу сущности, а не сессии: трек/релиз/артист из мультинодового
+  // поиска делятся своим узлом (описание, превью, строка «Узел»); без host на
+  // сущности — активным. Имя в строке «Узел» ищется по этому host в списке,
+  // иначе оно разъехалось бы с адресом («node-1 · чужой:порт»).
+  const nodes = useServers((s) => s.nodes);
+  const targetHost =
+    target.kind === 'track' ? target.track.host : target.kind === 'release' ? target.release.host : target.artist.host;
   const host = targetHost ?? node.host;
+  const nodeName = nodes.find((n) => n.host === host)?.name ?? node.name;
 
   const sheetProps = {
     className: s.shareSheet,
@@ -91,7 +95,7 @@ function ShareSheetBody({ target, close }: { target: ShareTarget; close: () => v
     <div className={s.shareBackdrop} onClick={close}>
       {reducedMotion ? (
         <div {...sheetProps}>
-          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={host} nodeName={node.name} mobile={mobile} />
+          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={host} nodeName={nodeName} mobile={mobile} />
         </div>
       ) : (
         <motion.div
@@ -106,7 +110,7 @@ function ShareSheetBody({ target, close }: { target: ShareTarget; close: () => v
           dragMomentum={false}
           onDragEnd={mobile ? onDragEnd : undefined}
         >
-          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={host} nodeName={node.name} mobile={mobile} />
+          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={host} nodeName={nodeName} mobile={mobile} />
         </motion.div>
       )}
     </div>

@@ -58,7 +58,8 @@ export function Artist() {
             {a ? [`${n} ${plural(n, ['релиз', 'релиза', 'релизов'])}`, a.activeYears].filter(Boolean).join(' · ') : '—'}
           </div>
           {a && (
-            <Button size="sm" className={s.artistShare} onClick={() => openShare({ kind: 'artist', artist: { id: a.id, name: a.name } })}>
+            // Артист шерится на узле, с которого открыт экран (?host=), не на активном.
+            <Button size="sm" className={s.artistShare} onClick={() => openShare({ kind: 'artist', artist: { id: a.id, name: a.name, host } })}>
               <ShareIcon size={13} />
               Поделиться
             </Button>

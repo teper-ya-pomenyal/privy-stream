@@ -124,6 +124,26 @@ it('все узлы молчат → статусы, а не «ничего не
   expect(screen.queryByText('НИЧЕГО НЕ НАЙДЕНО')).toBeNull();
 });
 
+it('мульти-поиск: все узлы ответили пусто → формулировка про все узлы', async () => {
+  seedServers(NODE_1, NODE_2);
+  seedTokens(NODE_1.host, NODE_2.host);
+  useSettings.setState({ multiNodeSearch: true });
+  // Оба узла дали пустой успешный ответ: searched N nodes, found nothing anywhere.
+  vi.mocked(nodeApi.search).mockImplementation(async () => ({ artists: [], tracks: [] }));
+  renderCatalog();
+  await typeQuery();
+  expect(await screen.findByText('Ни на одном из узлов ничего не найдено по запросу.')).toBeInTheDocument();
+  // Формулировка одиночного режима про «этот узел» здесь — враньё про область.
+  expect(screen.queryByText('На этом узле ничего не найдено по запросу.')).toBeNull();
+});
+
+it('одиночный поиск: пустой ответ — прежняя формулировка', async () => {
+  vi.mocked(nodeApi.search).mockImplementation(async () => ({ artists: [], tracks: [] }));
+  renderCatalog();
+  await typeQuery();
+  expect(await screen.findByText('На этом узле ничего не найдено по запросу.')).toBeInTheDocument();
+});
+
 it('401 на чужом узле не разлогинивает', async () => {
   seedServers(NODE_1, NODE_2);
   seedTokens(NODE_1.host, NODE_2.host);

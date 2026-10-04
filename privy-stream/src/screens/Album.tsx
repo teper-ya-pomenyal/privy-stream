@@ -12,10 +12,11 @@ import { BackIcon, Button, EmptyState, ErrorNote, NodeCover, PlayIcon, Screen, S
 import s from './screens.module.css';
 
 /** «Поделиться» — открывает шторку ShareSheet с ссылкой и мессенджерами. */
-function ShareButton({ release }: { release: Release }) {
+function ShareButton({ release, host }: { release: Release; host: string }) {
   const open = useShareSheet((st) => st.open);
   return (
-    <Button size="md" onClick={() => open({ kind: 'release', release })}>
+    // useRelease host не проставляет — шерем релиз на узле, с которого открыт экран.
+    <Button size="md" onClick={() => open({ kind: 'release', release: { ...release, host } })}>
       <ShareIcon size={14} />
       Поделиться
     </Button>
@@ -124,7 +125,7 @@ export function Album() {
                 <PlayIcon size={13} />
                 Слушать
               </Button>
-              {r && <ShareButton release={r} />}
+              {r && <ShareButton release={r} host={host} />}
             </div>
 
             <div className={s.tracks}>

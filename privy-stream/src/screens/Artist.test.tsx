@@ -60,6 +60,24 @@ it('has a share button that opens the artist sheet', async () => {
   act(() => useShareSheet.getState().close());
 });
 
+it('shares the artist on the node from ?host=, not the active one', async () => {
+  useServers.setState({ nodes: TWO_NODES, activeId: 'n1' });
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={['/artist/ar1?host=10.0.0.2%3A2']}>
+        {/* Шторка живёт в AppShell — для проверки строки «Узел» монтируем рядом. */}
+        <Routes>
+          <Route element={<Artist />} path="/artist/:id" />
+        </Routes>
+        <ShareSheet />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  await userEvent.click(await screen.findByRole('button', { name: 'Поделиться' }));
+  // Честная пара «имя узла ссылки · его адрес», не активная сессия.
+  expect(screen.getByText('Узел: ru-ind · 10.0.0.2:2')).toBeInTheDocument();
+});
+
 it('carries ?host= from the artist link into the release link', async () => {
   useServers.setState({ nodes: TWO_NODES, activeId: 'n1' });
   vi.mocked(nodeApi.artist).mockResolvedValue({
