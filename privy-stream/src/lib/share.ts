@@ -77,6 +77,19 @@ function legacyCopy(text: string) {
 export type ShareResult = 'shared' | 'copied';
 
 /**
+ * Тихое копирование в буфер: без системного шера (кнопка «Копировать» шторки
+ * должна срабатывать сразу, где бы ни был доступен navigator.share) и с
+ * фолбэком для не-secure контекстов.
+ */
+export async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    legacyCopy(text);
+  }
+}
+
+/**
  * Поделиться текстом: системный шер, если есть, иначе — буфер обмена.
  * Отмена шера пользователем — не ошибка и не копия; сбой шера — повод
  * попробовать буфер обмена.
@@ -90,10 +103,6 @@ export async function shareOrCopy(text: string, title?: string, url?: string): P
       if (e instanceof DOMException && e.name === 'AbortError') return 'shared';
     }
   }
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    legacyCopy(text);
-  }
+  await copyText(text);
   return 'copied';
 }

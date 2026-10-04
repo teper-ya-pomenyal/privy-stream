@@ -81,6 +81,23 @@ it('copies the link and flashes «Скопировано»', async () => {
   expect(screen.getByRole('button', { name: 'Скопировано' })).toBeInTheDocument();
 });
 
+it('copies via clipboard without waiting for the system share sheet', async () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  // На мобильном Chrome navigator.share есть: «Копировать» не должен звать его
+  // (в headless системный шер не резолвится — флеш «Скопировано» не наступит).
+  Object.defineProperty(navigator, 'share', { value: () => new Promise(() => {}), configurable: true });
+  renderSheet();
+  openSheet({ kind: 'release', release });
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Копировать' }));
+  });
+  expect(writeText).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: 'Скопировано' })).toBeInTheDocument();
+  // @ts-expect-error тестовая зачистка
+  delete navigator.share;
+});
+
 it('builds messenger links with url and text', () => {
   renderSheet();
   openSheet({ kind: 'release', release });

@@ -38,5 +38,9 @@ test('login on a mock node, play an album, navigate tracks, and save a favorite'
 
   await page.getByRole('button', { name: 'Добавить в фонотеку' }).first().click();
   await page.getByRole('link', { name: 'Фонотека' }).click();
-  await expect(page.getByText('Полынный свет', { exact: true })).toBeVisible();
+  // Текст «Полынный свет» остаётся в DOM уходящего альбома и мини-плеера —
+  // ждём переход и проверяем трек именно в списке фонотеки (кнопка строки
+  // называется «Играть/Пауза „…"» — играющий трек сейчас на паузе-видe «Пауза»).
+  await expect(page).toHaveURL(/library/);
+  await expect(page.getByRole('button', { name: /«Полынный свет»/ })).toBeVisible();
 });
