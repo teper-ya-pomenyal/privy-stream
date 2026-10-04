@@ -12,6 +12,7 @@ import { AudioEngine } from './AudioEngine';
 import { FullPlayer } from './FullPlayer';
 import { startListenReporter } from './listenReporter';
 import { MiniPlayer, PlayerBar } from './PlayerBar';
+import { ShareSheet } from '../ui/ShareSheet';
 import s from './layout.module.css';
 
 export function AppShell() {
@@ -78,6 +79,8 @@ export function AppShell() {
       )}
       {/* AnimatePresence играет выезд шторки плеера при закрытии */}
       <AnimatePresence>{fullscreen && <FullPlayer sheetY={sheetY} />}</AnimatePresence>
+      {/* Окно «Поделиться» — поверх всего, включая плеер (см. z-index в ui.module.css) */}
+      <ShareSheet />
       <AudioEngine />
     </div>
   );
