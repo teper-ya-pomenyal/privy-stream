@@ -19,3 +19,12 @@ it('updates data-theme immediately through the fallback when ViewTransition is u
   expect(useSettings.getState().theme).toBe('light');
   expect(document.documentElement).toHaveAttribute('data-theme', 'light');
 });
+
+it('multiNodeSearch defaults to false and setMultiNodeSearch toggles it', () => {
+  expect(useSettings.getState().multiNodeSearch).toBe(false);
+  act(() => useSettings.getState().setMultiNodeSearch(true));
+  expect(useSettings.getState().multiNodeSearch).toBe(true);
+  // гигиена: не оставляем включённый флаг следующим тестам
+  act(() => useSettings.getState().setMultiNodeSearch(false));
+  expect(useSettings.getState().multiNodeSearch).toBe(false);
+});

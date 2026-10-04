@@ -7,8 +7,10 @@ export type Theme = 'light' | 'dark';
 interface SettingsState {
   dense: boolean;
   theme: Theme;
+  multiNodeSearch: boolean;
   setDense: (dense: boolean) => void;
   setTheme: (theme: Theme) => void;
+  setMultiNodeSearch: (v: boolean) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -16,7 +18,9 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       dense: false,
       theme: 'dark',
+      multiNodeSearch: false,
       setDense: (dense) => set({ dense }),
+      setMultiNodeSearch: (v) => set({ multiNodeSearch: v }),
       setTheme: (theme) => {
         // Плавная смена: View Transitions делает кросс-фейд всей страницы
         // (Chromium 111+, WebKit 18+); без API или при reduced-motion — мгновенно.
