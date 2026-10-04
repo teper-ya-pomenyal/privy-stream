@@ -1,41 +1,23 @@
-import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { errorText } from '../api';
 import { useRelease } from '../api/queries';
 import { fmtTime, plural } from '../lib/format';
-import { shareOrCopy } from '../lib/share';
+import type { Release } from '../api/types';
 import { useFavControl } from '../store/favorites';
 import { usePlayer } from '../store/player';
+import { useShareSheet } from '../store/shareSheet';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
 import { BackIcon, Button, EmptyState, ErrorNote, NodeCover, PlayIcon, Screen, ShareIcon, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
-/** «Поделиться»: системный шер, если есть, иначе — текст релиза в буфер обмена. */
-function ShareButton({ title, artist, code, host }: { title: string; artist: string; code?: string; host: string }) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const flashCopied = () => {
-    setCopied(true);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopied(false), 2000);
-  };
-
-  const share = async () => {
-    // Публичного URL у релиза нет — делимся тем, что поможет найти его на узле:
-    // имя, артист, код каталога и адрес узла (в веб-режиме — ещё и ссылка на страницу).
-    const url = location.protocol.startsWith('http') ? location.href : '';
-    const text = [`«${title}» — ${artist} · Privy Stream`, `Узел: ${host}`, code && `Каталог: ${code}`, url]
-      .filter(Boolean)
-      .join('\n');
-    if ((await shareOrCopy(text, title, url || undefined)) === 'copied') flashCopied();
-  };
-
+/** «Поделиться» — открывает шторку ShareSheet с ссылкой и мессенджерами. */
+function ShareButton({ release }: { release: Release }) {
+  const open = useShareSheet((st) => st.open);
   return (
-    <Button size="md" onClick={share}>
+    <Button size="md" onClick={() => open({ kind: 'release', release })}>
       <ShareIcon size={14} />
-      {copied ? 'Скопировано' : 'Поделиться'}
+      Поделиться
     </Button>
   );
 }
@@ -128,7 +110,7 @@ export function Album() {
                 <PlayIcon size={13} />
                 Слушать
               </Button>
-              {r && <ShareButton title={r.title} artist={r.artist} code={r.code} host={node.host} />}
+              {r && <ShareButton release={r} />}
             </div>
 
             <div className={s.tracks}>

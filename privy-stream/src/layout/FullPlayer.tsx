@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   motion,
   useDragControls,
@@ -8,11 +8,12 @@ import {
   type PanInfo,
 } from 'motion/react';
 import { fmtTime, trackNum } from '../lib/format';
-import { shareOrCopy } from '../lib/share';
 import { shouldClose } from '../lib/sheetClose';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
+import type { Track } from '../api/types';
 import { useCurrentTrack, useDuration, usePlayer } from '../store/player';
+import { useShareSheet } from '../store/shareSheet';
 import { useActiveNode } from '../store/servers';
 import { CoverThumb, cx, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, ShareIcon, TextLink } from '../ui';
 import { RepeatControl, SeekBar, ShuffleControl, VolumeControl } from './PlayerBar';
@@ -126,14 +127,12 @@ function FullPlayerBody({ dragControls, sheetY }: { dragControls: ReturnType<typ
               <div className={s.heroArtistRow}>
                 <span className={s.heroArtist}>{track.artist}</span>
                 {IS_WEB && (
-                  <>
-                    <span className={s.heroFavSoon} role="img" aria-label="Лайк трека — скоро" title="Лайк трека — скоро">
-                      <HeartIcon size={17} />
-                      <span>скоро</span>
-                    </span>
-                    <HeroShare title={track.title} artist={track.artist} host={node.host} />
-                  </>
+                  <span className={s.heroFavSoon} role="img" aria-label="Лайк трека — скоро" title="Лайк трека — скоро">
+                    <HeartIcon size={17} />
+                    <span>скоро</span>
+                  </span>
                 )}
+                <HeroShare track={track} />
               </div>
             </div>
           </div>
@@ -206,25 +205,13 @@ function FullPlayerBody({ dragControls, sheetY }: { dragControls: ReturnType<typ
   );
 }
 
-/** «Поделиться» у артиста: текст трека — в системный шер, иначе в буфер обмена. */
-function HeroShare({ title, artist, host }: { title: string; artist: string; host: string }) {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const share = async () => {
-    const url = location.protocol.startsWith('http') ? location.href : '';
-    const text = [`«${title}» — ${artist} · Privy Stream`, `Узел: ${host}`, url].filter(Boolean).join('\n');
-    if ((await shareOrCopy(text, title, url || undefined)) === 'copied') {
-      setCopied(true);
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
+/** «Поделиться» у артиста: открывает шторку ShareSheet за текущий трек. */
+function HeroShare({ track }: { track: Track }) {
+  const open = useShareSheet((st) => st.open);
   return (
-    <button type="button" className={s.heroShare} onClick={share} title="Поделиться треком">
+    <button type="button" className={s.heroShare} onClick={() => open({ kind: 'track', track })} title="Поделиться треком">
       <ShareIcon size={13} />
-      <span>{copied ? 'скопировано' : 'поделиться'}</span>
+      <span>поделиться</span>
     </button>
   );
 }

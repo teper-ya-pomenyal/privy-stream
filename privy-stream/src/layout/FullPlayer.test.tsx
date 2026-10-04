@@ -11,6 +11,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePlayer } from '../store/player';
 import { useServers } from '../store/servers';
+import { useShareSheet } from '../store/shareSheet';
 import type { Track } from '../api';
 import { FullPlayer } from './FullPlayer';
 
@@ -111,19 +112,15 @@ it('keeps the volume popover open for a grace period after the cursor leaves', (
   }
 });
 
-it('places the share button next to the like badge and copies the track text', async () => {
-  const writeText = vi.fn().mockResolvedValue(undefined);
-  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+it('places the share button next to the like badge and opens the track sheet', async () => {
   renderPlayer();
   // Порядок: артист, бейдж будущего лайка, кнопка «поделиться» после него
   const fav = screen.getByLabelText('Лайк трека — скоро');
   const share = screen.getByRole('button', { name: 'поделиться' });
   expect(after(fav, share)).toBe(true);
   fireEvent.click(share);
-  await act(async () => {});
-  expect(writeText).toHaveBeenCalledTimes(1);
-  const text = writeText.mock.calls[0][0] as string;
-  expect(text).toContain('«Track-a» — Artist · Privy Stream');
-  expect(text).toContain('Узел: 10.0.0.5:8080');
-  expect(screen.getByRole('button', { name: 'скопировано' })).toBeInTheDocument();
+  // Шторка «Поделиться» открылась за текущий трек (монтируется в AppShell —
+  // здесь проверяем только стор, как контракт между FullPlayer и ShareSheet).
+  expect(useShareSheet.getState().target).toEqual({ kind: 'track', track: track('a') });
+  useShareSheet.getState().close();
 });

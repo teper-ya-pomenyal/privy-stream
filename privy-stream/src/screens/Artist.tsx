@@ -4,9 +4,10 @@ import { useArtist } from '../api/queries';
 import { fmtNumber, plural } from '../lib/format';
 import { usePlayer } from '../store/player';
 import { useFavControl } from '../store/favorites';
+import { useShareSheet } from '../store/shareSheet';
 import { releaseMeta } from './Catalog';
 import { useActiveNode } from '../store/servers';
-import { ArtistAvatar, BackIcon, Button, EmptyState, ErrorNote, NodeCover, Screen, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
+import { ArtistAvatar, BackIcon, Button, EmptyState, ErrorNote, NodeCover, Screen, ShareIcon, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
 export function Artist() {
@@ -16,6 +17,7 @@ export function Artist() {
   const artist = useArtist(node.host, id);
   const play = usePlayer((p) => p.play);
   const fav = useFavControl();
+  const openShare = useShareSheet((st) => st.open);
   const a = artist.data;
 
   if (artist.isError) {
@@ -54,6 +56,12 @@ export function Artist() {
           <div className={s.artistMeta}>
             {a ? [`${n} ${plural(n, ['релиз', 'релиза', 'релизов'])}`, a.activeYears].filter(Boolean).join(' · ') : '—'}
           </div>
+          {a && (
+            <Button size="sm" className={s.artistShare} onClick={() => openShare({ kind: 'artist', artist: { id: a.id, name: a.name } })}>
+              <ShareIcon size={13} />
+              Поделиться
+            </Button>
+          )}
         </div>
       </div>
 

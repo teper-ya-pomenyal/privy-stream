@@ -753,6 +753,10 @@
   font: 500 13px/1.4 var(--font-display);
   color: var(--text-4);
 }
+.artistShare {
+  justify-self: start;
+  margin-top: 14px;
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
