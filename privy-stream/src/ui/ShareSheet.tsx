@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from 'motion/react';
-import { buildShareText, buildShareUrl, shareOrCopy, smsHref, type ShareTarget } from '../lib/share';
+import { buildShareText, buildShareUrl, copyText, shareOrCopy, smsHref, type ShareTarget } from '../lib/share';
 import { shouldClose } from '../lib/sheetClose';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
@@ -139,7 +139,8 @@ function ShareSheetContent({
     target.kind === 'artist' ? type : `${(target.kind === 'track' ? target.track : target.release).artist} · ${type}`;
 
   const copy = async (value: string) => {
-    await shareOrCopy(value, title);
+    // Именно буфер, не системный шер: кнопка обязана сработать мгновенно.
+    await copyText(value);
     setCopied(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 2000);
