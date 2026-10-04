@@ -557,6 +557,14 @@ export function Skeleton({ style }: { style?: CSSProperties }) {
 }
 
 /**
+ * Чип имени узла: помечает, с какого узла пришла строка в мультинодовом поиске.
+ * Спокойный, в стиле секционных подписей — источник, а не тревога.
+ */
+export function NodeBadge({ name }: { name: string }) {
+  return <span className={s.nodeBadge}>{name}</span>;
+}
+
+/**
  * Таблица треков.
  * release — треклист релиза (номер, подпись «артист», формат в своей колонке),
  * popular — компактный список без подписи, library — с артистом и релизом.
@@ -569,6 +577,7 @@ export function TrackTable({
   header = true,
   fav,
   highlightId,
+  nodeName,
 }: {
   tracks: Track[];
   variant: 'release' | 'popular' | 'library';
@@ -578,6 +587,8 @@ export function TrackTable({
   fav?: FavControl;
   /** id трека, пришедшего по ссылке шеринга: мягкая подсветка и скролл к строке. */
   highlightId?: string | null;
+  /** Имя узла для бейджа источника: показывается у треков с host (мультипоиск). */
+  nodeName?: (host: string) => string;
 }) {
   const current = useCurrentTrack();
   const isPlaying = usePlayer((s) => s.playing);
@@ -670,6 +681,8 @@ export function TrackTable({
                   <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>
                   {/* На телефоне колонки артиста и релиза скрыты — показываем их строкой под названием */}
                   <span className={cx(s.tSub, s.mobileOnly, 'ellipsis')}>{[t.artist, t.release].filter(Boolean).join(' · ')}</span>
+                  {/* Бейдж источника в мультипоиске: треки с host помечены узлом */}
+                  {nodeName && t.host && <NodeBadge name={nodeName(t.host)} />}
                 </>
               ) : (
                 <span className={cx(s.tTitle, 'ellipsis')}>{t.title}</span>

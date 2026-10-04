@@ -519,6 +519,71 @@
   color: var(--accent-text);
 }
 
+/* Переключатель мультипоиска — спокойный чип-кнопка под строкой поиска */
+.multiToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  align-self: flex-start;
+  padding: 7px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  font: 600 12px/1 var(--font-display);
+  color: var(--text-3);
+  transition:
+    color 0.14s,
+    border-color 0.14s;
+}
+.multiToggle:hover {
+  color: var(--text);
+  border-color: var(--line-hover);
+}
+.multiSwitch {
+  position: relative;
+  width: 24px;
+  height: 14px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  transition:
+    background 0.14s,
+    border-color 0.14s;
+}
+.multiSwitch::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-5);
+  transition:
+    transform 0.14s,
+    background 0.14s;
+}
+.multiToggle[aria-checked='true'] {
+  color: var(--text);
+  border-color: var(--line-hover);
+}
+.multiToggle[aria-checked='true'] .multiSwitch {
+  background: var(--accent-bg);
+  border-color: var(--accent-bg);
+}
+.multiToggle[aria-checked='true'] .multiSwitch::after {
+  transform: translateX(10px);
+  background: var(--accent-text);
+}
+
+/* Статусы узлов в мультипоиске: кто не ответил или просит вход */
+.nodeStatuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font: 500 13px/1.5 var(--font-display);
+  color: var(--text-4);
+}
+
 .results {
   display: flex;
   flex-direction: column;

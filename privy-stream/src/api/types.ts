@@ -38,6 +38,8 @@ export interface Release {
    * методом coverUrl (GET /catalog/albums/{id}/cover).
    */
   coverPath?: string;
+  /** Узел, с которого сущность пришла в мультинодовом поиске */
+  host?: string;
 }
 
 export interface Track {
@@ -68,6 +70,8 @@ export interface ReleaseDetails extends Release {
 export interface ArtistRef {
   id: string;
   name: string;
+  /** Узел, с которого сущность пришла в мультинодовом поиске */
+  host?: string;
 }
 
 export interface ArtistDetails extends ArtistRef {
