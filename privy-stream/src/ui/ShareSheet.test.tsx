@@ -168,3 +168,23 @@ it('focuses the copy button on open and returns focus to the trigger on close', 
   unmount();
   expect(document.activeElement).toBe(trig);
 });
+
+it('labels the shared track with its own node, not the active one', () => {
+  // Трек из мультинодового поиска пришёл с чужого узла: в строке «Узел» — он,
+  // а не активная сессия.
+  useServers.setState({
+    nodes: [
+      { id: 'n1', name: 'node-1', host: '10.0.0.1:1', owner: '', access: '', note: '', ping: 15, status: 'online' },
+      { id: 'n2', name: 'node-2', host: 'ind.local:9000', owner: '', access: '', note: '', ping: 25, status: 'online' },
+    ],
+    activeId: 'n1',
+  });
+  renderSheet();
+  openSheet({ kind: 'track', track: { ...track, host: 'ind.local:9000' } });
+  expect(screen.getByText('Узел: node-1 · ind.local:9000')).toBeInTheDocument();
+  // Возврат к одиночной сессии — остальные тесты файла рассчитаны на неё.
+  useServers.setState({
+    nodes: [{ id: 'n1', name: 'node-1', host: '10.0.0.1:1', owner: '', access: '', note: '', ping: 15, status: 'online' }],
+    activeId: 'n1',
+  });
+});

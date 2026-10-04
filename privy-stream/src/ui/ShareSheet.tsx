@@ -73,6 +73,12 @@ function ShareSheetBody({ target, close }: { target: ShareTarget; close: () => v
     if (shouldClose(info, window.innerHeight)) close();
   };
 
+  // Шерим по узлу сущности, а не сессии: трек/релиз из мультинодового поиска
+  // делятся своим узлом (описание, превью, строка «Узел»), артист и локальные —
+  // активным. Один расчёт до контента — обе ветки шторки согласованы.
+  const targetHost = target.kind === 'track' ? target.track.host : target.kind === 'release' ? target.release.host : undefined;
+  const host = targetHost ?? node.host;
+
   const sheetProps = {
     className: s.shareSheet,
     role: 'dialog' as const,
@@ -85,7 +91,7 @@ function ShareSheetBody({ target, close }: { target: ShareTarget; close: () => v
     <div className={s.shareBackdrop} onClick={close}>
       {reducedMotion ? (
         <div {...sheetProps}>
-          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={node.host} nodeName={node.name} mobile={mobile} />
+          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={host} nodeName={node.name} mobile={mobile} />
         </div>
       ) : (
         <motion.div
@@ -100,7 +106,7 @@ function ShareSheetBody({ target, close }: { target: ShareTarget; close: () => v
           dragMomentum={false}
           onDragEnd={mobile ? onDragEnd : undefined}
         >
-          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={node.host} nodeName={node.name} mobile={mobile} />
+          <ShareSheetContent target={target} url={IS_WEB ? buildShareUrl(target) : null} host={host} nodeName={node.name} mobile={mobile} />
         </motion.div>
       )}
     </div>

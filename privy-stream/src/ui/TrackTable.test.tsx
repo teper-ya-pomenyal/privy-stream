@@ -5,6 +5,7 @@ import type { Track } from '../api';
 import type { FavControl } from '../store/favorites';
 import { usePlayer } from '../store/player';
 import { TrackTable } from './index';
+import s from './ui.module.css';
 
 const track: Track = { id: 'track', title: 'Test song', artistId: 'artist', artist: 'Test artist', releaseId: 'album', release: 'Test album', durationSec: 61 };
 
@@ -57,4 +58,20 @@ it('exposes play and favorite as sibling buttons and does not mix them', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Добавить в фонотеку' }));
   expect(toggle).toHaveBeenCalledTimes(1);
   expect(onPlay).toHaveBeenCalledTimes(1);
+});
+
+it('highlights only the playing node row when two tracks share one id', () => {
+  // Мультипоиск: тот же трек пришёл и с локального контекста, и с чужого узла.
+  // Плеер играет чужую версию — подсветка не должна переползти на локальную строку.
+  const remote: Track = { ...track, host: 'ind.local:9000' };
+  usePlayer.setState({ queue: [remote], index: 0, playing: true });
+  const onPlay = vi.fn();
+  render(<TrackTable tracks={[track, remote]} variant="library" onPlay={onPlay} />);
+  const rows = screen.getAllByRole('button', { name: /«Test song»$/ }).map((b) => b.closest('div')!);
+  expect(rows).toHaveLength(2);
+  expect(rows[0]).not.toHaveClass(s.playing);
+  expect(rows[1]).toHaveClass(s.playing);
+  // Клик по неподсвеченной строке играет её, а не ставит на паузу чужую.
+  fireEvent.click(screen.getByRole('button', { name: 'Играть «Test song»' }));
+  expect(onPlay).toHaveBeenCalledWith(track);
 });

@@ -636,10 +636,14 @@ export function TrackTable({
         </div>
       )}
       {tracks.map((t, i) => {
-        const playing = current?.id === t.id;
+        // Играет именно эта версия трека: id совпадает И узел совпадает
+        // (локальные треки без host — undefined === undefined).
+        const playing = current?.id === t.id && current?.host === t.host;
         return (
-          /* Клик по строке — удобство мыши; путь клавиатуры и диктора — кнопка названия ниже */
-          <div key={t.id} ref={rowRef(t)} className={cx(s.trackRow, cols, playing && s.playing, highlightId === t.id && s.rowTarget)} onClick={() => playRow(t, playing)}>
+          /* Клик по строке — удобство мыши; путь клавиатуры и диктора — кнопка названия ниже.
+              Ключ с узлом: в мультинодовом поиске один трек может прийти с двух узлов —
+              без него React получает дубликаты ключей и путает строки. */
+          <div key={t.host ? `${t.host}/${t.id}` : t.id} ref={rowRef(t)} className={cx(s.trackRow, cols, playing && s.playing, highlightId === t.id && s.rowTarget)} onClick={() => playRow(t, playing)}>
             {/* Подсветка играющего трека переезжает к новой строке (Motion layoutId):
                 видно, что именно заиграло после клика или переключения. */}
             {playing && (
