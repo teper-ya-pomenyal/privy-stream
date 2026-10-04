@@ -9,7 +9,7 @@ import { usePlayer } from '../store/player';
 import { useFavControl } from '../store/favorites';
 import { useActiveNode, useServers } from '../store/servers';
 import { useSettings } from '../store/settings';
-import { ArtistAvatar, Button, CloseIcon, EmptyState, ErrorNote, hostLabel, NodeCover, Screen, SearchIcon, Skeleton, TrackTable } from '../ui';
+import { ArtistAvatar, Button, CloseIcon, EmptyState, ErrorNote, hostLabel, NodeBadge, NodeCover, Screen, SearchIcon, Skeleton, TrackTable } from '../ui';
 import s from './screens.module.css';
 
 const FILTERS = ['ВСЁ', 'АРТИСТЫ', 'РЕЛИЗЫ', 'ТРЕКИ'] as const;
@@ -219,6 +219,9 @@ function CatalogView({ host, name }: { host: string; name: string }) {
                 <button key={a.id} type="button" className={s.artistRow} onClick={() => openArtist(a.id, a.host ?? host)}>
                   <ArtistAvatar name={a.name} className={s.artistAva} />
                   <span className={s.artistName}>{a.name}</span>
+                  {/* Бейдж источника — только в мультипоиске: одноимённые артисты
+                      с разных узлов не должны выглядеть одинаковыми строками. */}
+                  {multi && <NodeBadge name={nodeName(a.host ?? host)} />}
                   <span className={s.artistGo}>
                     <Chevron />
                   </span>
@@ -242,7 +245,7 @@ function CatalogView({ host, name }: { host: string; name: string }) {
         {result.tracks.length > 0 && (
           <section className={s.resultSection}>
             <div className="t-section">Треки</div>
-            <TrackTable variant="library" tracks={result.tracks} onPlay={(t) => play(t, result.tracks)} fav={fav} nodeName={nodeName} />
+            <TrackTable variant="library" tracks={result.tracks} onPlay={(t) => play(t, result.tracks)} fav={fav} nodeName={multi ? nodeName : undefined} />
           </section>
         )}
       </div>

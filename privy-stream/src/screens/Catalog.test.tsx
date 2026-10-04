@@ -97,17 +97,20 @@ it('мульти-поиск склеивает выдачу и вешает бе
   useSettings.setState({ multiNodeSearch: true });
   vi.mocked(nodeApi.search).mockImplementation(async (host) =>
     host === NODE_1.host
-      ? { artists: [{ id: 'a1', name: 'Артист 1' }], tracks: [trackOn(NODE_1.host, 1)] }
-      : { artists: [{ id: 'a2', name: 'Артист 2' }], tracks: [trackOn(NODE_2.host, 2)] },
+      ? { artists: [{ id: 'a1', name: 'Исполнитель 1' }], tracks: [trackOn(NODE_1.host, 1)] }
+      : { artists: [{ id: 'a2', name: 'Исполнитель 2' }], tracks: [trackOn(NODE_2.host, 2)] },
   );
   renderCatalog();
   await typeQuery();
   expect(await screen.findByRole('heading', { name: 'Поиск по узлам' })).toBeInTheDocument();
   expect(await screen.findByText('Трек 1')).toBeInTheDocument();
   expect(screen.getByText('Трек 2')).toBeInTheDocument();
-  // У каждой строки — бейдж её узла: имя узла, а не адрес.
-  expect(screen.getByText('node-1')).toBeInTheDocument();
-  expect(screen.getByText('node-2')).toBeInTheDocument();
+  // У каждой строки — бейдж её узла: имя узла, а не адрес (треки и артисты).
+  expect(screen.getAllByText('node-1')).toHaveLength(2);
+  expect(screen.getAllByText('node-2')).toHaveLength(2);
+  // Бейдж в строке артиста называет именно его узел.
+  expect(screen.getByText('Исполнитель 1').closest('button')).toHaveTextContent('node-1');
+  expect(screen.getByText('Исполнитель 2').closest('button')).toHaveTextContent('node-2');
 });
 
 it('все узлы молчат → статусы, а не «ничего не найдено»', async () => {

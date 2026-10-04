@@ -501,7 +501,7 @@
 /* Чип имени узла в мультипоиске: подпись-источник в стиле t-section,
    мелкий кегль и приглушённый цвет — без акцентов-сирены. */
 .nodeBadge {
-  align-self: flex-start;
+  flex: none;
   padding: 3px 8px;
   border-radius: 99px;
   border: 1px solid var(--line);
@@ -510,6 +510,11 @@
   letter-spacing: 0.01em;
   color: var(--text-3);
   white-space: nowrap;
+}
+/* В ячейке названия трека (колонка) чип не растягивается на всю ширину;
+   во flex-строках (artistRow) его центрирует align-items самой строки. */
+.tTitleCell .nodeBadge {
+  align-self: flex-start;
 }
 /* Сердечко избранного в строке трека */
 .tFav {
