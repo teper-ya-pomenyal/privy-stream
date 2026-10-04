@@ -28,7 +28,7 @@ export function buildShareUrl(target: ShareTarget, loc: Location = location): st
 }
 
 /** Заголовок текста шаринга: «Название» — Артист · Privy Stream. */
-function shareHead(target: ShareTarget): string {
+export function shareHead(target: ShareTarget): string {
   switch (target.kind) {
     case 'track':
       return `«${target.track.title}» — ${target.track.artist} · Privy Stream`;

@@ -124,3 +124,17 @@ it('places the share button next to the like badge and opens the track sheet', a
   expect(useShareSheet.getState().target).toEqual({ kind: 'track', track: track('a') });
   useShareSheet.getState().close();
 });
+
+it('keeps the player open when Escape closes the share sheet above it', () => {
+  renderPlayer();
+  fireEvent.click(screen.getByRole('button', { name: 'поделиться' }));
+  expect(useShareSheet.getState().target).not.toBeNull();
+  // Пока шторка открыта, Escape не закрывает плеер (сама шторка закрывается
+  // своим листенером — покрыто в ShareSheet.test).
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(usePlayer.getState().fullscreen).toBe(true);
+  useShareSheet.getState().close();
+  // После закрытия шторки Escape снова сворачивает плеер.
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(usePlayer.getState().fullscreen).toBe(false);
+});

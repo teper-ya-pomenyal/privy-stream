@@ -106,6 +106,8 @@ it('builds messenger links with url and text', () => {
   expect(tg.href).toContain(encodeURIComponent('http://localhost:3000/#/album/rel1'));
   expect(tg.target).toBe('_blank');
   expect(tg.rel).toContain('noopener');
+  // В Telegram ссылка идёт отдельным параметром — текст без «Узел/Каталог».
+  expect(tg.href).not.toContain(encodeURIComponent('Узел:'));
   const wa = screen.getByRole('link', { name: /WhatsApp/ }) as HTMLAnchorElement;
   expect(wa.href).toContain('https://wa.me/?text=');
   expect(wa.href).toContain(encodeURIComponent('«Album» — Artist · Privy Stream'));

@@ -754,7 +754,7 @@
   color: var(--text-4);
 }
 .artistShare {
-  justify-self: start;
+  align-self: flex-start; /* artistHeadText — flex-колонка: justify-self не работает */
   margin-top: 14px;
 }
 .stats {

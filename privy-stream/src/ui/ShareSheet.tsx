@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from 'motion/react';
-import { buildShareText, buildShareUrl, copyText, shareOrCopy, smsHref, type ShareTarget } from '../lib/share';
+import { buildShareText, buildShareUrl, copyText, shareHead, shareOrCopy, smsHref, type ShareTarget } from '../lib/share';
 import { shouldClose } from '../lib/sheetClose';
 import { useMobile } from '../lib/useMobile';
 import { IS_WEB } from '../platform/mode';
@@ -132,7 +132,6 @@ function ShareSheetContent({
   );
 
   const text = buildShareText(target, url, host);
-  const head = buildShareText(target, null, host);
   const type = KIND_LABEL[target.kind];
   const title = target.kind === 'track' ? target.track.title : target.kind === 'release' ? target.release.title : target.artist.name;
   const sub =
@@ -149,7 +148,7 @@ function ShareSheetContent({
   const messengers: ReactNode[] = [];
   if (IS_WEB) {
     messengers.push(
-      <a key="tg" className={s.shareTarget} href={`https://t.me/share/url?url=${encodeURIComponent(url ?? '')}&text=${encodeURIComponent(head)}`} target="_blank" rel="noopener" aria-label="Отправить в Telegram">
+      <a key="tg" className={s.shareTarget} href={`https://t.me/share/url?url=${encodeURIComponent(url ?? '')}&text=${encodeURIComponent(shareHead(target))}`} target="_blank" rel="noopener" aria-label="Отправить в Telegram">
         <TelegramMark />
         <span>Telegram</span>
       </a>,

@@ -41,7 +41,11 @@ export function FullPlayer({ sheetY: externalY }: { sheetY?: MotionValue<string 
   const [closing, setClosing] = useState(false);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setFullscreen(false);
+    // Пока поверх плеера открыта шторка «Поделиться», Escape закрывает только её.
+    const onKey = (e: KeyboardEvent) => {
+      if (useShareSheet.getState().target) return;
+      if (e.key === 'Escape') setFullscreen(false);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [setFullscreen]);
