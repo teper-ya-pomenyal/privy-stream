@@ -88,7 +88,12 @@ export function Album() {
           <div className={s.albumMain}>
             {r ? (
               <div className={s.albumHead}>
-                <button type="button" className={s.artistLink} onClick={() => navigate(`/artist/${encodeURIComponent(r.artistId)}`)}>
+                <button
+                  type="button"
+                  className={s.artistLink}
+                  // Свой узел прокидываем дальше: вложенные переходы не уводят на активный.
+                  onClick={() => navigate(`/artist/${encodeURIComponent(r.artistId)}?host=${encodeURIComponent(host)}`)}
+                >
                   {r.artist}
                 </button>
                 <h2 className={s.albumTitle}>

@@ -21,7 +21,7 @@ vi.mock('../api', () => ({
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { nodeApi } from '../api';
 import { useShareSheet } from '../store/shareSheet';
 import { useServers } from '../store/servers';
@@ -44,6 +44,17 @@ const renderAlbum = () =>
       </MemoryRouter>
     </QueryClientProvider>,
   );
+
+// Проба адреса: вложенные переходы проверяем по фактическому URL роутера.
+const LocationProbe = () => {
+  const { pathname, search } = useLocation();
+  return <span data-testid="route">{pathname}{search}</span>;
+};
+
+const TWO_NODES = [
+  { id: 'n1', name: 'node-1', host: '10.0.0.1:1', owner: '', access: '', note: '', ping: 15, status: 'online' as const },
+  { id: 'ru-ind', name: 'ru-ind', host: '10.0.0.2:2', owner: '', access: '', note: '', ping: 25, status: 'online' as const },
+];
 
 it('opens the share sheet for the release instead of sharing directly', async () => {
   renderAlbum();
@@ -71,13 +82,7 @@ it('highlights the shared track from the ?t= parameter and scrolls to it', async
 });
 
 it('loads the release from the node in ?host= instead of the active one', async () => {
-  useServers.setState({
-    nodes: [
-      { id: 'n1', name: 'node-1', host: '10.0.0.1:1', owner: '', access: '', note: '', ping: 15, status: 'online' },
-      { id: 'ru-ind', name: 'ru-ind', host: '10.0.0.2:2', owner: '', access: '', note: '', ping: 25, status: 'online' },
-    ],
-    activeId: 'n1',
-  });
+  useServers.setState({ nodes: TWO_NODES, activeId: 'n1' });
   vi.mocked(nodeApi.release).mockClear();
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -95,4 +100,22 @@ it('loads the release from the node in ?host= instead of the active one', async 
   // Имя узла в шапке метаданных — узел из ссылки, не активный.
   await waitFor(() => expect(screen.getByText('ru-ind')).toBeInTheDocument());
   expect(screen.queryByText('node-1')).toBeNull();
+});
+
+it('carries ?host= from the album link into the artist link', async () => {
+  useServers.setState({ nodes: TWO_NODES, activeId: 'n1' });
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={['/album/AR-021?host=10.0.0.2%3A2']}>
+        <LocationProbe />
+        <Routes>
+          <Route element={<Album />} path="/album/:id" />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  // Ссылка на артиста ведёт на его узел (тот же, что в ссылке альбома);
+  // формат — как в Catalog (Task 4): encodeURIComponent(host) → %3A вместо ':'.
+  await userEvent.click(await screen.findByRole('button', { name: 'Artist' }));
+  await waitFor(() => expect(screen.getByTestId('route')).toHaveTextContent('/artist/ar1?host=10.0.0.2%3A2'));
 });

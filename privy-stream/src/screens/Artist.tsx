@@ -101,7 +101,12 @@ export function Artist() {
           <div className={s.disco}>
             {a && a.releases.length === 0 && <div className={s.quietNote}>релизов на узле нет</div>}
             {a?.releases.map((r) => (
-              <div key={r.id} className={s.discoItem} onClick={() => navigate(`/album/${encodeURIComponent(r.id)}`)}>
+              // Свой узел прокидываем дальше: вложенные переходы не уводят на активный.
+              <div
+                key={r.id}
+                className={s.discoItem}
+                onClick={() => navigate(`/album/${encodeURIComponent(r.id)}?host=${encodeURIComponent(host)}`)}
+              >
                 <NodeCover host={host} releaseId={r.id} seed={r.id} flagged={r.flagged} />
                 <div className={s.discoText}>
                   <span className={s.discoTitle}>{r.title}</span>
