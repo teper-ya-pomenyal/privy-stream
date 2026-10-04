@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useSearchParams } from 'react-router';
 import { errorText, nodeApi, type NodeInfo } from '../api';
 import { secrets } from '../platform/secrets';
 import { nodesStorage } from '../platform/nodesStorage';
@@ -221,5 +222,19 @@ export const useActiveNodeOrNull = () =>
 
 /** Для экранов внутри приложения: туда не попасть без выбранного узла (см. App). */
 export const useActiveNode = () => useActiveNodeOrNull()!;
+
+/**
+ * Узел, на котором открывать релиз/артиста: ссылки каталога ведут с ?host= узла,
+ * где нашлась сущность. Совпадение с узлом списка (схема не учитывается) — его
+ * канонический node.host; параметра нет или узел неизвестен — активный.
+ */
+export function useNodeHost(): string {
+  const [params] = useSearchParams();
+  const raw = params.get('host');
+  const active = useActiveNode();
+  const nodes = useServers((s) => s.nodes);
+  if (!raw) return active.host;
+  return nodes.find((n) => withoutScheme(n.host) === withoutScheme(raw))?.host ?? active.host;
+}
 
 export const useOnlineCount = () => useServers((s) => s.nodes.filter((n) => n.status === 'online').length);

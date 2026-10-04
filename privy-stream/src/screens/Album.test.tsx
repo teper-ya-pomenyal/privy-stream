@@ -21,7 +21,8 @@ vi.mock('../api', () => ({
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { nodeApi } from '../api';
 import { useShareSheet } from '../store/shareSheet';
 import { useServers } from '../store/servers';
 import { ShareSheet } from '../ui/ShareSheet';
@@ -67,4 +68,31 @@ it('highlights the shared track from the ?t= parameter and scrolls to it', async
   const row = screen.getByRole('button', { name: 'Играть «Song»' }).closest('div')!;
   expect(row).toHaveClass(ui.rowTarget);
   expect(scrollIntoView).toHaveBeenCalledTimes(1);
+});
+
+it('loads the release from the node in ?host= instead of the active one', async () => {
+  useServers.setState({
+    nodes: [
+      { id: 'n1', name: 'node-1', host: '10.0.0.1:1', owner: '', access: '', note: '', ping: 15, status: 'online' },
+      { id: 'ru-ind', name: 'ru-ind', host: '10.0.0.2:2', owner: '', access: '', note: '', ping: 25, status: 'online' },
+    ],
+    activeId: 'n1',
+  });
+  vi.mocked(nodeApi.release).mockClear();
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      {/* Route с :id — иначе useParams не достаёт идентификатор из адреса. */}
+      <MemoryRouter initialEntries={['/album/AR-021?host=10.0.0.2%3A2']}>
+        <Routes>
+          <Route element={<Album />} path="/album/:id" />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  // Релиз запрошен с узла из ссылки, а не с активного.
+  await waitFor(() => expect(vi.mocked(nodeApi.release)).toHaveBeenCalledWith('10.0.0.2:2', 'AR-021'));
+  expect(vi.mocked(nodeApi.release)).not.toHaveBeenCalledWith('10.0.0.1:1', expect.anything());
+  // Имя узла в шапке метаданных — узел из ссылки, не активный.
+  await waitFor(() => expect(screen.getByText('ru-ind')).toBeInTheDocument());
+  expect(screen.queryByText('node-1')).toBeNull();
 });

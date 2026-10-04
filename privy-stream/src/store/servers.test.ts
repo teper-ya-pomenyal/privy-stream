@@ -1,3 +1,6 @@
+import { renderHook } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, expect, it, vi } from 'vitest';
 
 vi.mock('../api', () => ({
@@ -8,7 +11,7 @@ vi.mock('../api', () => ({
 }));
 
 import { nodeApi } from '../api';
-import { useServers } from './servers';
+import { useNodeHost, useServers } from './servers';
 import { useSession } from './session';
 
 const descriptor = { name: 'node-a', owner: 'own', access: 'open', note: '' };
@@ -115,4 +118,34 @@ it('remove ignores an unknown id', async () => {
   useServers.setState({ nodes: [stored('n1', '10.0.0.5:8080')], activeId: 'n1' });
   await useServers.getState().remove('ghost');
   expect(useServers.getState().nodes).toHaveLength(1);
+});
+
+// useNodeHost читает ?host= через useSearchParams — хук обязан жить внутри роутера.
+const atRoute = (route: string) => ({ children }: { children: ReactNode }) =>
+  createElement(MemoryRouter, { initialEntries: [route] }, children);
+
+const twoNodes = () => useServers.setState({ nodes: [stored('n1', '10.0.0.5:8080', 'online'), stored('n2', '10.0.0.6:8080')], activeId: 'n1' });
+
+it('useNodeHost: без ?host= возвращает активный узел', () => {
+  twoNodes();
+  const { result } = renderHook(() => useNodeHost(), { wrapper: atRoute('/catalog') });
+  expect(result.current).toBe('10.0.0.5:8080');
+});
+
+it('useNodeHost: ?host= второго узла — канонический host из списка', () => {
+  twoNodes();
+  const { result } = renderHook(() => useNodeHost(), { wrapper: atRoute('/album/rel1?host=10.0.0.6%3A8080') });
+  expect(result.current).toBe('10.0.0.6:8080');
+});
+
+it('useNodeHost: совпадение после отбрасывания схемы — тоже канонический host', () => {
+  twoNodes();
+  const { result } = renderHook(() => useNodeHost(), { wrapper: atRoute('/album/rel1?host=https%3A%2F%2F10.0.0.6%3A8080') });
+  expect(result.current).toBe('10.0.0.6:8080');
+});
+
+it('useNodeHost: неизвестный узел в ?host= тихо заменяется активным', () => {
+  twoNodes();
+  const { result } = renderHook(() => useNodeHost(), { wrapper: atRoute('/album/rel1?host=https%3A%2F%2Fevil.example') });
+  expect(result.current).toBe('10.0.0.5:8080');
 });

@@ -7,7 +7,7 @@ import { useFavControl } from '../store/favorites';
 import { usePlayer } from '../store/player';
 import { useShareSheet } from '../store/shareSheet';
 import { releaseMeta } from './Catalog';
-import { useActiveNode } from '../store/servers';
+import { useActiveNode, useNodeHost, useServers } from '../store/servers';
 import { BackIcon, Button, EmptyState, ErrorNote, NodeCover, PlayIcon, Screen, ShareIcon, Skeleton, TextLink, TrackTable, TrackTableSkeleton } from '../ui';
 import s from './screens.module.css';
 
@@ -24,7 +24,12 @@ function ShareButton({ release }: { release: Release }) {
 
 export function Album() {
   const { id = '' } = useParams();
-  const node = useActiveNode();
+  // Каталог ведёт ссылки с ?host= узла, где нашёлся релиз, — открываем на нём.
+  const host = useNodeHost();
+  const active = useActiveNode();
+  const nodes = useServers((s) => s.nodes);
+  // Имя узла для шапки ищется по этому host в списке, fallback — активный.
+  const node = { host, name: nodes.find((n) => n.host === host)?.name ?? active.name };
   const navigate = useNavigate();
   // Пришедший по ссылке трек (ссылка шторки: #/album/<id>?t=<trackId>). Параметр
   // из URL не стираем — ссылку можно переслать дальше.
