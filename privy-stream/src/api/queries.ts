@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { browseApi, nodeApi } from './index';
+import { fanOutSearch } from './multiSearch';
 
 // Ключи всегда начинаются с host, чтобы данные разных узлов не смешивались.
 export const keys = {
@@ -8,6 +9,9 @@ export const keys = {
   release: (host: string, id: string) => ['node', host, 'release', id] as const,
   artist: (host: string, id: string) => ['node', host, 'artist', id] as const,
   cover: (host: string, id: string) => ['node', host, 'cover', id] as const,
+  // hostsKey = hosts.join('|') в порядке участия (активный первым): смена состава
+  // или порядка = новый ключ = честный рефетч; данные узлов не смешиваются.
+  multiSearch: (hostsKey: string, query: string) => ['nodes', hostsKey, 'search', query] as const,
 };
 
 /** Полка узла; data === undefined и enabled === false, если узел её не отдаёт. */
@@ -26,6 +30,14 @@ export const useSearch = (host: string, query: string) =>
     queryKey: keys.search(host, query),
     queryFn: () => nodeApi.search(host, query),
     enabled: query.length > 0,
+    placeholderData: (prev) => prev,
+  });
+
+export const useMultiSearch = (hosts: readonly string[], query: string) =>
+  useQuery({
+    queryKey: keys.multiSearch(hosts.join('|'), query),
+    queryFn: () => fanOutSearch(hosts.map((host) => ({ host })), query),
+    enabled: query.length > 0 && hosts.length > 0,
     placeholderData: (prev) => prev,
   });
 
