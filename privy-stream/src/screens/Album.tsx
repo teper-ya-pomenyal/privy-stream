@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { errorText } from '../api';
 import { useRelease } from '../api/queries';
 import { fmtTime, plural } from '../lib/format';
@@ -26,6 +26,10 @@ export function Album() {
   const { id = '' } = useParams();
   const node = useActiveNode();
   const navigate = useNavigate();
+  // Пришедший по ссылке трек (ссылка шторки: #/album/<id>?t=<trackId>). Параметр
+  // из URL не стираем — ссылку можно переслать дальше.
+  const [params] = useSearchParams();
+  const sharedTrackId = params.get('t');
   const release = useRelease(node.host, id);
   const play = usePlayer((p) => p.play);
   const fav = useFavControl();
@@ -116,7 +120,7 @@ export function Album() {
             <div className={s.tracks}>
               {r ? (
                 r.tracks.length ? (
-                  <TrackTable variant="release" tracks={r.tracks} onPlay={(t) => play(t, r.tracks)} fav={fav} />
+                  <TrackTable variant="release" tracks={r.tracks} onPlay={(t) => play(t, r.tracks)} fav={fav} highlightId={sharedTrackId} />
                 ) : (
                   <EmptyState label="ПУСТОЙ ТРЕКЛИСТ" text="Узел отдал релиз без треков." />
                 )

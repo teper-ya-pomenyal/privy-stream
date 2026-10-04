@@ -25,6 +25,7 @@ import { MemoryRouter } from 'react-router';
 import { useShareSheet } from '../store/shareSheet';
 import { useServers } from '../store/servers';
 import { ShareSheet } from '../ui/ShareSheet';
+import ui from '../ui/ui.module.css';
 import { Album } from './Album';
 
 useServers.setState({
@@ -50,4 +51,20 @@ it('opens the share sheet for the release instead of sharing directly', async ()
   expect(screen.getByRole('dialog', { name: 'Поделиться' })).toBeInTheDocument();
   expect((screen.getByRole('textbox') as HTMLInputElement).value).toContain('#/album/rel1');
   act(() => useShareSheet.getState().close());
+});
+
+it('highlights the shared track from the ?t= parameter and scrolls to it', async () => {
+  const scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={['/album/rel1?t=t1']}>
+        <Album />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Играть «Song»' })).toBeInTheDocument());
+  const row = screen.getByRole('button', { name: 'Играть «Song»' }).closest('div')!;
+  expect(row).toHaveClass(ui.rowTarget);
+  expect(scrollIntoView).toHaveBeenCalledTimes(1);
 });

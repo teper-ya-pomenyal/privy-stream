@@ -1,5 +1,5 @@
-import { useState, type ButtonHTMLAttributes, type CSSProperties, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
-import { motion } from 'motion/react';
+import { useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import type { NodeInfo, Track } from '../api';
 import { useCoverUrl } from '../api/queries';
 import { fmtTime, trackNum } from '../lib/format';
@@ -568,6 +568,7 @@ export function TrackTable({
   onPlay,
   header = true,
   fav,
+  highlightId,
 }: {
   tracks: Track[];
   variant: 'release' | 'popular' | 'library';
@@ -575,9 +576,23 @@ export function TrackTable({
   header?: boolean;
   /** Избранное: сердечко в строке (веб — неактивное с пометкой «скоро»). */
   fav?: FavControl;
+  /** id трека, пришедшего по ссылке шеринга: мягкая подсветка и скролл к строке. */
+  highlightId?: string | null;
 }) {
   const current = useCurrentTrack();
   const isPlaying = usePlayer((s) => s.playing);
+  const reducedMotion = useReducedMotion();
+  // Подсветка срабатывает один раз на монтирование: скролл не должен повторяться
+  // при каждом перерендере таблицы.
+  const didScroll = useRef(false);
+
+  /** Подсветка общего трека: класс строки и одноразовый скролл к ней. */
+  const rowRef = (t: Track) => (el: HTMLDivElement | null) => {
+    if (el && highlightId === t.id && !didScroll.current) {
+      didScroll.current = true;
+      el.scrollIntoView({ block: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
+    }
+  };
 
   /** Клик по строке: другой трек — играть с начала, текущий — пауза/продолжить. */
   const playRow = (t: Track, isCurrent: boolean) => (isCurrent ? usePlayer.getState().toggle() : onPlay(t));
@@ -613,7 +628,7 @@ export function TrackTable({
         const playing = current?.id === t.id;
         return (
           /* Клик по строке — удобство мыши; путь клавиатуры и диктора — кнопка названия ниже */
-          <div key={t.id} className={cx(s.trackRow, cols, playing && s.playing)} onClick={() => playRow(t, playing)}>
+          <div key={t.id} ref={rowRef(t)} className={cx(s.trackRow, cols, playing && s.playing, highlightId === t.id && s.rowTarget)} onClick={() => playRow(t, playing)}>
             {/* Подсветка играющего трека переезжает к новой строке (Motion layoutId):
                 видно, что именно заиграло после клика или переключения. */}
             {playing && (

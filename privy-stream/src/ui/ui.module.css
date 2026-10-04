@@ -643,6 +643,20 @@
 }
 
 /* ---------- Share sheet ---------- */
+/* Строка трека, пришедшего по ссылке шеринга (см. TrackTable highlightId):
+   мягкая терракотовая заливка, затухающая за 2.4s. */
+@keyframes row-target-fade {
+  from {
+    background: color-mix(in srgb, var(--selection-bg) 22%, transparent);
+  }
+  to {
+    background: transparent;
+  }
+}
+.rowTarget {
+  animation: row-target-fade 2.4s ease-out forwards;
+}
+
 /* Появление/закрытие анимирует Motion: на мобильном шторка снизу (как полный
    плеер), на десктопе — центрированный диалог; см. ShareSheet.tsx. */
 .shareBackdrop {
